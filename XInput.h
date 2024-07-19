@@ -98,11 +98,11 @@ public:
 
 	static const XInputMap_Button * const getButtonFromEnum(XInputControl ctrl);
 	static XInputMap_Trigger * const getTriggerFromEnum(XInputControl ctrl);
+	static XInputMap_Joystick * const getJoyFromEnum(XInputControl ctrl);
 
 	// Set Control Surfaces
 	void setButton(const XInputMap_Button &button, boolean state);
 
-	void setDpad(const XInputMap_Button &pad, boolean state);
 	void setDpad(boolean up, boolean down, boolean left, boolean right, boolean useSOCD=true);
 
 	void setTrigger(const XInputMap_Trigger &triggerData, int32_t val);
@@ -175,10 +175,7 @@ private:
 struct XInputMap_Trigger {
 	constexpr XInputMap_Trigger(uint8_t i, XInputController::Range *inputRange)
 		: index(i), inputRange(inputRange) {}
-	/**
-	output range
-	**/
-	static const XInputController::Range range;
+	static const XInputController::Range outputRange;
 	const uint8_t index;
 	XInputController::Range *inputRange;
 };
@@ -191,10 +188,7 @@ struct XInputMap_Trigger {
 struct XInputMap_Joystick {
 	constexpr XInputMap_Joystick(uint8_t xl, uint8_t xh, uint8_t yl, uint8_t yh, XInputController::Range *inputRange)
 		: x_low(xl), x_high(xh), y_low(yl), y_high(yh), inputRange(inputRange) {}
-	/**
-	output range
-	**/
-	static const XInputController::Range range;
+	static const XInputController::Range outputRange;
 	const uint8_t x_low;
 	const uint8_t x_high;
 	const uint8_t y_low;

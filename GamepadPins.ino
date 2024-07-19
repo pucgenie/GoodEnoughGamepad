@@ -154,7 +154,13 @@ void setup() {
 	pinMode(Pin_DpadRight.pinNumber, INPUT_PULLUP);
   #endif
 
-	XInput.setJoystickRange(0, ADC_Max);  // Set joystick range to the ADC
+	#if (UseLeftJoystick | UseRightJoystick)
+	// Set joystick range to the ADC
+	auto joyRange const = XInput.getJoyFromEnum(XInputControl::JOY_LEFT)->inputRange;
+	joyRange->min = 0;
+	joyRange->max = ADC_Max;
+	#endif
+
 	//XInput.setAutoSend(false);  // Wait for all controls before sending
 
 	XInput.begin();
@@ -163,10 +169,10 @@ void setup() {
 static inline void computeTriggerValue(const XInputMap_Trigger &control_trigger, const uint8_t pin_Trigger) {
 	// Read trigger buttons
 	#if UseTriggerButtons == 1
-	int triggerValue  = !digitalRead(pin_Trigger) ? ADC_Max : 0;
+	auto triggerValue  = !digitalRead(pin_Trigger) ? ADC_Max : 0;
 	#else
 	// Read trigger potentiometer values
-	int triggerValue = analogRead(pin_Trigger);
+	auto triggerValue = analogRead(pin_Trigger);
 	#endif
 	
 	XInput.setTrigger(control_trigger, triggerValue);

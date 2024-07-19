@@ -73,7 +73,7 @@ static const XInputMap_Button Map_ButtonB(3, 5);
 static const XInputMap_Button Map_ButtonX(3, 6);
 static const XInputMap_Button Map_ButtonY(3, 7);
 
-const XInputController::Range XInputMap_Trigger::range = { 0, 255 };  // uint8_t
+const XInputController::Range XInputMap_Trigger::outputRange = { 0, 255 };  // uint8_t
 
 static XInputMap_Trigger Map_TriggerLeft(4, new XInputController::Range());
 static XInputMap_Trigger Map_TriggerRight(5, Map_TriggerLeft.inputRange);
@@ -86,12 +86,12 @@ XInputMap_Trigger * const XInputController::getTriggerFromEnum(XInputControl ctr
 	}
 }
 
-const XInputController::Range XInputMap_Joystick::range = { -32768, 32767 };  // int16_t
+const XInputController::Range XInputMap_Joystick::outputRange = { -32768, 32767 };  // int16_t
 
 static XInputMap_Joystick Map_JoystickLeft(6, 7, 8, 9, new XInputController::Range());
 static XInputMap_Joystick Map_JoystickRight(10, 11, 12, 13, Map_JoystickLeft.inputRange);
 
-XInputMap_Joystick * const getJoyFromEnum(XInputControl ctrl) {
+XInputMap_Joystick * const XInputController::getJoyFromEnum(XInputControl ctrl) {
 	switch (ctrl) {
 	case(JOY_LEFT): return &Map_JoystickLeft;
 	case(JOY_RIGHT): return &Map_JoystickRight;
@@ -107,8 +107,8 @@ XInputMap_Joystick * const getJoyFromEnum(XInputControl ctrl) {
 struct XInputMap_Rumble {
 	constexpr XInputMap_Rumble(uint8_t rIndex, uint8_t bIndex)
 		: rxIndex(rIndex), bufferIndex(bIndex) {}
-	const uint8_t rxIndex;
-	const uint8_t bufferIndex;
+	const uint8_t rxIndex     :4;
+	const uint8_t bufferIndex :4;
 };
 
 static const XInputMap_Rumble RumbleLeft(3, 0);   // Large motor
@@ -181,10 +181,6 @@ void XInputController::setButton(const XInputMap_Button &buttonData, boolean sta
 	//}
 }
 
-void XInputController::setDpad(const XInputMap_Button &pad, boolean state) {
-	setButton(pad, state);
-}
-
 void XInputController::setDpad(boolean up, boolean down, boolean left, boolean right, boolean useSOCD) {
 	// Simultaneous Opposite Cardinal Directions (SOCD) Cleaner
 	if (useSOCD) {
@@ -195,17 +191,17 @@ void XInputController::setDpad(boolean up, boolean down, boolean left, boolean r
 	//const boolean autoSendTemp = autoSendOption;  // Save autosend state
 	//autoSendOption = false;  // Disable temporarily
 
-	setDpad(*getButtonFromEnum(DPAD_UP), up);
-	setDpad(*getButtonFromEnum(DPAD_DOWN), down);
-	setDpad(*getButtonFromEnum(DPAD_LEFT), left);
-	setDpad(*getButtonFromEnum(DPAD_RIGHT), right);
+	setButton(*getButtonFromEnum(DPAD_UP), up);
+	setButton(*getButtonFromEnum(DPAD_DOWN), down);
+	setButton(*getButtonFromEnum(DPAD_LEFT), left);
+	setButton(*getButtonFromEnum(DPAD_RIGHT), right);
 
 	//autoSendOption = autoSendTemp;  // Re-enable from option
 	//autosend();
 }
 
 void XInputController::setTrigger(const XInputMap_Trigger &triggerData, int32_t val) {
-	val = rescaleInput(val, *triggerData.inputRange, XInputMap_Trigger::range);
+	val = rescaleInput(val, *triggerData.inputRange, XInputMap_Trigger::outputRange);
 	if (getTrigger(triggerData) == val) return;  // Trigger hasn't changed
 
 	tx[triggerData.index] = val;
@@ -213,15 +209,15 @@ void XInputController::setTrigger(const XInputMap_Trigger &triggerData, int32_t 
 }
 
 void XInputController::setJoystick(const XInputMap_Joystick &joyData, int32_t x, int32_t y) {
-	x = rescaleInput(x, *joyData.inputRange, XInputMap_Joystick::range);
-	y = rescaleInput(y, *joyData.inputRange, XInputMap_Joystick::range);
+	x = rescaleInput(x, *joyData.inputRange, XInputMap_Joystick::outputRange);
+	y = rescaleInput(y, *joyData.inputRange, XInputMap_Joystick::outputRange);
 
 	setJoystickDirect(joyData, x, y);
 }
 
 void XInputController::setJoystickX(const XInputMap_Joystick &joyData, int32_t x, boolean invert) {
-	x = rescaleInput(x, *joyData.inputRange, XInputMap_Joystick::range);
-	if (invert) x = invertInput(x, XInputMap_Joystick::range);
+	x = rescaleInput(x, *joyData.inputRange, XInputMap_Joystick::outputRange);
+	if (invert) x = invertInput(x, XInputMap_Joystick::outputRange);
 
 	if (getJoystickX(joyData) == x) return;  // Axis hasn't changed
 
@@ -232,8 +228,8 @@ void XInputController::setJoystickX(const XInputMap_Joystick &joyData, int32_t x
 }
 
 void XInputController::setJoystickY(const XInputMap_Joystick &joyData, int32_t y, boolean invert) {
-	y = rescaleInput(y, *joyData.inputRange, XInputMap_Joystick::range);
-	if (invert) y = invertInput(y, XInputMap_Joystick::range);
+	y = rescaleInput(y, *joyData.inputRange, XInputMap_Joystick::outputRange);
+	if (invert) y = invertInput(y, XInputMap_Joystick::outputRange);
 
 	if (getJoystickY(joyData) == y) return;  // Axis hasn't changed
 
@@ -244,7 +240,7 @@ void XInputController::setJoystickY(const XInputMap_Joystick &joyData, int32_t y
 }
 
 void XInputController::setJoystick(const XInputMap_Joystick &joyData, boolean up, boolean down, boolean left, boolean right, boolean useSOCD) {
-	const Range &range = XInputMap_Joystick::range;
+	const Range &range = XInputMap_Joystick::outputRange;
 
 	int16_t x = 0;
 	int16_t y = 0;
@@ -442,16 +438,10 @@ void XInputController::setTriggerRange(int32_t rangeMin, int32_t rangeMax) {
 }
 
 void XInputController::setJoystickRange(const int32_t rangeMin, const int32_t rangeMax) {
-	{
-		Range &range_JoyLeft = *(getJoyFromEnum(JOY_LEFT)->inputRange);
-		range_JoyLeft.min = rangeMin;
-		range_JoyLeft.max = rangeMax;
-	}
-	{
-		Range &range_JoyRight = *(getJoyFromEnum(JOY_RIGHT)->inputRange);
-		range_JoyRight.min = rangeMin;
-		range_JoyRight.max = rangeMax;
-	}
+	Range &range_JoyLeft = *(getJoyFromEnum(JOY_LEFT)->inputRange);
+	range_JoyLeft.min = rangeMin;
+	range_JoyLeft.max = rangeMax;
+	getJoyFromEnum(JOY_RIGHT)->inputRange = &range_JoyLeft;
 }
 
 // Resets class back to initial values
@@ -465,8 +455,8 @@ void XInputController::reset() {
 	ledPattern = XInputLEDPattern::Off;  // No LEDs on
 
 	// Reset rescale ranges
-	setTriggerRange(XInputMap_Trigger::range.min, XInputMap_Trigger::range.max);
-	setJoystickRange(XInputMap_Joystick::range.min, XInputMap_Joystick::range.max);
+	setTriggerRange(XInputMap_Trigger::outputRange.min, XInputMap_Trigger::outputRange.max);
+	setJoystickRange(XInputMap_Joystick::outputRange.min, XInputMap_Joystick::outputRange.max);
 
 	// Clear user-set options
 	recvCallback = nullptr;
