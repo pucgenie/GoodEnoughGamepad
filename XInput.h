@@ -148,6 +148,8 @@ public:
 	// Setup
 	void reset();
 
+	bool isDataUnsent();
+
 private:
 	// Sent Data
 	uint8_t tx[20];  // USB transmit data

@@ -463,4 +463,6 @@ void XInputController::reset() {
 	//autoSendOption = true;
 }
 
-XInputController XInput;
+bool XInputController::isDataUnsent() {
+	return newData;
+}
