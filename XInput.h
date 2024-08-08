@@ -131,7 +131,7 @@ struct XInputMap_Rumble {
 
 class XInputController {
 public:
-	XInputController(XIRange& joystickInputRange);
+	XInputController();
 
 	void begin();
 
@@ -207,6 +207,7 @@ public:
 	static const XInputMap_Rumble RumbleLeft;
 	static const XInputMap_Rumble RumbleRight;
 
+	XIRange triggerInputRange;
 	XInputMap_Trigger Map_TriggerLeft;
 	XInputMap_Trigger Map_TriggerRight;
 

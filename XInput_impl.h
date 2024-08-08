@@ -75,8 +75,6 @@ const XInputMap_Button XInputController::Map_ButtonY(3, 7);
 
 const XIRange XInputMap_Trigger::outputRange = { 0, 255 };  // uint8_t
 
-static XIRange TriggerRange; // default
-
 // static const XInputMap_Trigger * XInputController::getTriggerFromEnum(const XInputControl ctrl) {
 // 	switch (ctrl) {
 // 	case(TRIGGER_LEFT): return &Map_TriggerLeft;
@@ -102,9 +100,10 @@ const XInputMap_Rumble XInputController::RumbleRight(4, 1);  // Small motor
 // XInputController Class (API)                           |
 // --------------------------------------------------------
 
-XInputController::XInputController(XIRange& joystickInputRange) :
-	Map_TriggerLeft(4, &TriggerRange), Map_TriggerRight(5, Map_TriggerLeft.inputRange),
-	joystickInputRange(joystickInputRange),
+XInputController::XInputController() :
+	triggerInputRange(XInputMap_Trigger::outputRange),
+	Map_TriggerLeft(4, &triggerInputRange), Map_TriggerRight(5, &triggerInputRange),
+	joystickInputRange(XInputMap_Joystick::outputRange),
 	Map_JoystickLeft(6, 7, 8, 9, &joystickInputRange), Map_JoystickRight(10, 11, 12, 13, &joystickInputRange),
 	tx(), rumble() // Zero initialize arrays
 {

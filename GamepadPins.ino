@@ -47,15 +47,13 @@
 // workaround because of Arduino IDEs compilation units
 #include "XInput_impl.h"
 
-static XIRange joystickInputRange;
-static XInputController XInput(joystickInputRange);
 
 // Setup
 #define UseLeftJoystick 0  // set to 1 to enable left joystick
-const boolean InvertLeftYAxis   = false;  // set to true to use inverted left joy Y
+static const boolean InvertLeftYAxis   = false;  // set to true to use inverted left joy Y
 
 #define UseRightJoystick 0  // set to 1 to enable right joystick
-const boolean InvertRightYAxis  = false;  // set to true to use inverted right joy Y
+static const boolean InvertRightYAxis  = false;  // set to true to use inverted right joy Y
 
 #define UseTriggerButtons 1   // set to 0 if using analog triggers
 
@@ -68,46 +66,51 @@ struct Pin_State {
 
 #if UseLeftJoystick == 1
 // Joystick Pins
-const uint8_t Pin_LeftJoyX  = A0;
-const uint8_t Pin_LeftJoyY  = A1;
+static const uint8_t Pin_LeftJoyX  = A0;
+static const uint8_t Pin_LeftJoyY  = A1;
 // pucgenie: don't need to zero-initialize - is always written to at first.
-int16_t joyLeftOld[2];
+static int16_t joyLeftOld[2];
 #endif
 #if UseRightJoystick == 1
-const uint8_t Pin_RightJoyX = A2;
-const uint8_t Pin_RightJoyY = A3;
-int16_t joyRightOld[2];
+static const uint8_t Pin_RightJoyX = A2;
+static const uint8_t Pin_RightJoyY = A3;
+static int16_t joyRightOld[2];
 #endif
 
 // Trigger Pins
-const uint8_t Pin_TriggerL = 14;
-const uint8_t Pin_TriggerR = 15;
+static const uint8_t Pin_TriggerL = 14;
+static const uint8_t Pin_TriggerR = 15;
 
-// pucgenie: don't need to zero-initialize - is always written to at first.
-uint8_t triggerOld[2];
+#if UseTriggerButtons == 1
+	// less complexity here
+#else
+	// pucgenie: don't need to zero-initialize - is always written to at first.
+	static uint8_t triggerOld[2];
+#endif
 
 // Button Pins
-struct Pin_State Pin_ButtonA = {pinNumber: 2, lastState: false};
-struct Pin_State Pin_ButtonB = {pinNumber: 3, lastState: false};
-struct Pin_State Pin_ButtonX = {pinNumber: 4, lastState: false};
-struct Pin_State Pin_ButtonY = {pinNumber: 5, lastState: false};
-struct Pin_State Pin_ButtonLB = {pinNumber: 6, lastState: false};
-struct Pin_State Pin_ButtonRB = {pinNumber: 7, lastState: false};
-struct Pin_State Pin_ButtonBack  = {pinNumber: 8, lastState: false};
-struct Pin_State Pin_ButtonStart = {pinNumber: 9, lastState: false};
-struct Pin_State Pin_ButtonL3 = {pinNumber: 10, lastState: false};
-struct Pin_State Pin_ButtonR3 = {pinNumber: 16, lastState: false};
+static struct Pin_State Pin_ButtonA = {pinNumber: 2, lastState: false};
+static struct Pin_State Pin_ButtonB = {pinNumber: 3, lastState: false};
+static struct Pin_State Pin_ButtonX = {pinNumber: 4, lastState: false};
+static struct Pin_State Pin_ButtonY = {pinNumber: 5, lastState: false};
+static struct Pin_State Pin_ButtonLB = {pinNumber: 6, lastState: false};
+static struct Pin_State Pin_ButtonRB = {pinNumber: 7, lastState: false};
+static struct Pin_State Pin_ButtonBack  = {pinNumber: 8, lastState: false};
+static struct Pin_State Pin_ButtonStart = {pinNumber: 9, lastState: false};
+static struct Pin_State Pin_ButtonL3 = {pinNumber: 10, lastState: false};
+static struct Pin_State Pin_ButtonR3 = {pinNumber: 16, lastState: false};
 // button LOGO unused by design.
 
 // Directional Pad Pins
 #define ProcessDpadButtons 0
 #if ProcessDpadButtons == 1
-struct Pin_State Pin_DpadUp    = {pinNumber: 0, lastState: false};
-struct Pin_State Pin_DpadDown  = {pinNumber: 1, lastState: false};
-struct Pin_State Pin_DpadLeft  = {pinNumber: 40, lastState: false};
-struct Pin_State Pin_DpadRight = {pinNumber: 41, lastState: false};
+static struct Pin_State Pin_DpadUp    = {pinNumber: 0, lastState: false};
+static struct Pin_State Pin_DpadDown  = {pinNumber: 1, lastState: false};
+static struct Pin_State Pin_DpadLeft  = {pinNumber: 40, lastState: false};
+static struct Pin_State Pin_DpadRight = {pinNumber: 41, lastState: false};
 #endif
 
+static XInputController XInput;
 
 #ifndef COMPLETELY_UNTOUCH_TIMER1
   ISR(TIMER1_COMPA_vect) {
@@ -119,7 +122,7 @@ struct Pin_State Pin_DpadRight = {pinNumber: 41, lastState: false};
 // interruptable pins: 0,1,2,3,7
 
 void setup() {
-  // try to reach <200 µA
+  // try to achieve <200 µA
   power_spi_disable();
   power_twi_disable();
 
@@ -160,7 +163,7 @@ void setup() {
 
 	#if (UseLeftJoystick | UseRightJoystick)
 	// Set joystick range to the ADC
-	auto joyRange const = XInput.getJoyFromEnum(XInputControl::JOY_LEFT)->inputRange;
+	auto joyRange const = XInput.joystickInputRange;
 	joyRange->min = 0;
 	joyRange->max = ADC_Max;
 	#endif
@@ -168,6 +171,7 @@ void setup() {
 	//XInput.setAutoSend(false);  // Wait for all controls before sending
 
 	XInputUSB::setRecvCallback(
+		// can't bind (non-global) variables to closure if used as C function pointer
 		[](){XInput.receive();}
 	);
 	XInput.begin();
@@ -249,8 +253,8 @@ void loop() {
 		// inverted by default. If the "Invert" variable is false
 		// then we'll take the opposite value with 'not' (!).
 
-		XInput.setJoystickX(JOY_LEFT, leftJoyX);
-		XInput.setJoystickY(JOY_LEFT, leftJoyY, !InvertLeftYAxis);
+		XInput.setJoystickX(XInput.Map_JOY_LEFT, leftJoyX);
+		XInput.setJoystickY(XInput.Map_JOY_LEFT, leftJoyY, !InvertLeftYAxis);
   }
 	#endif
 
@@ -260,8 +264,8 @@ void loop() {
 		int rightJoyX = analogRead(Pin_RightJoyX);
 		int rightJoyY = analogRead(Pin_RightJoyY);
 
-		XInput.setJoystickX(JOY_RIGHT, rightJoyX);
-		XInput.setJoystickY(JOY_RIGHT, rightJoyY, !InvertRightYAxis);
+		XInput.setJoystickX(XInput.Map_JOY_RIGHT, rightJoyX);
+		XInput.setJoystickY(XInput.Map_JOY_RIGHT, rightJoyY, !InvertRightYAxis);
   }
 	#endif
 
