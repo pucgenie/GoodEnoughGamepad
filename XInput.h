@@ -79,16 +79,43 @@ enum class XInputLEDPattern : uint8_t {
 // --------------------------------------------------------
 
 struct XInputMap_Button {
-	constexpr XInputMap_Button(uint8_t i, uint8_t o)
+	constexpr XInputMap_Button(const uint8_t i, const uint8_t o)
 		: index(i), mask(o) {}
 	const uint8_t index :5;
 	const uint8_t mask  :3;
 };
 
-// forward
-struct XInputMap_Trigger;
-struct XInputMap_Joystick;
+// Control Input Ranges
+struct XIRange { int32_t min; int32_t max; };
 
+// --------------------------------------------------------
+// XInput Trigger Maps                                    |
+// (Matches ID to tx index)                               |
+// --------------------------------------------------------
+
+struct XInputMap_Trigger {
+	constexpr XInputMap_Trigger(uint8_t i, XIRange *inputRange)
+		: index(i), inputRange(inputRange) {}
+	static const XIRange outputRange;
+	const uint8_t index;
+	XIRange *inputRange;
+};
+
+// --------------------------------------------------------
+// XInput Joystick Maps                                   |
+// (Matches ID to tx x/y high/low indices)                |
+// --------------------------------------------------------
+
+struct XInputMap_Joystick {
+	constexpr XInputMap_Joystick(uint8_t xl, uint8_t xh, uint8_t yl, uint8_t yh, XIRange *inputRange)
+		: x_low(xl), x_high(xh), y_low(yl), y_high(yh), inputRange(inputRange) {}
+	static const XIRange outputRange;
+	const uint8_t x_low;
+	const uint8_t x_high;
+	const uint8_t y_low;
+	const uint8_t y_high;
+	XIRange *inputRange;
+};
 
 class XInputController {
 public:
@@ -96,9 +123,9 @@ public:
 
 	void begin();
 
-	static const XInputMap_Button * const getButtonFromEnum(XInputControl ctrl);
-	static XInputMap_Trigger * const getTriggerFromEnum(XInputControl ctrl);
-	static XInputMap_Joystick * const getJoyFromEnum(XInputControl ctrl);
+	//static const XInputMap_Button * getButtonFromEnum(XInputControl ctrl);
+	//static const XInputMap_Trigger * getTriggerFromEnum(XInputControl ctrl);
+	//static const XInputMap_Joystick * getJoyFromEnum(XInputControl ctrl);
 
 	// Set Control Surfaces
 	void setButton(const XInputMap_Button &button, boolean state);
@@ -139,8 +166,6 @@ public:
 	int send();
 	int receive();
 
-	// Control Input Ranges
-	struct Range { int32_t min; int32_t max; };
 
 	void setTriggerRange(int32_t rangeMin, int32_t rangeMax);
 	void setJoystickRange(int32_t rangeMin, int32_t rangeMax);
@@ -149,6 +174,26 @@ public:
 	void reset();
 
 	bool isDataUnsent();
+
+	static const XInputMap_Button Map_DpadUp;
+	static const XInputMap_Button Map_DpadDown;
+	static const XInputMap_Button Map_DpadLeft;
+	static const XInputMap_Button Map_DpadRight;
+	static const XInputMap_Button Map_ButtonStart;
+	static const XInputMap_Button Map_ButtonBack;
+	static const XInputMap_Button Map_ButtonL3;
+	static const XInputMap_Button Map_ButtonR3;
+
+	static const XInputMap_Button Map_ButtonLB;
+	static const XInputMap_Button Map_ButtonRB;
+	static const XInputMap_Button Map_ButtonLogo;
+	static const XInputMap_Button Map_ButtonA;
+	static const XInputMap_Button Map_ButtonB;
+	static const XInputMap_Button Map_ButtonX;
+	static const XInputMap_Button Map_ButtonY;
+
+	XInputMap_Trigger Map_TriggerLeft;
+	XInputMap_Trigger Map_TriggerRight;
 
 private:
 	// Sent Data
@@ -165,39 +210,8 @@ private:
 
 	void parseLED(uint8_t leds);  // Parse LED data and set pattern/player data
 
-	static int32_t rescaleInput(int32_t val, const Range& in, const Range &out);
-	static int16_t invertInput(int16_t val, const Range& range);
+	static int32_t rescaleInput(int32_t val, const XIRange& in, const XIRange &out);
+	static int16_t invertInput(int16_t val, const XIRange& range);
 };
-
-// --------------------------------------------------------
-// XInput Trigger Maps                                    |
-// (Matches ID to tx index)                               |
-// --------------------------------------------------------
-
-struct XInputMap_Trigger {
-	constexpr XInputMap_Trigger(uint8_t i, XInputController::Range *inputRange)
-		: index(i), inputRange(inputRange) {}
-	static const XInputController::Range outputRange;
-	const uint8_t index;
-	XInputController::Range *inputRange;
-};
-
-// --------------------------------------------------------
-// XInput Joystick Maps                                   |
-// (Matches ID to tx x/y high/low indices)                |
-// --------------------------------------------------------
-
-struct XInputMap_Joystick {
-	constexpr XInputMap_Joystick(uint8_t xl, uint8_t xh, uint8_t yl, uint8_t yh, XInputController::Range *inputRange)
-		: x_low(xl), x_high(xh), y_low(yl), y_high(yh), inputRange(inputRange) {}
-	static const XInputController::Range outputRange;
-	const uint8_t x_low;
-	const uint8_t x_high;
-	const uint8_t y_low;
-	const uint8_t y_high;
-	XInputController::Range *inputRange;
-};
-
-extern XInputController XInput;
 
 #endif

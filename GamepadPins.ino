@@ -44,7 +44,10 @@
 
 #include <avr/power.h>
 #include <avr/sleep.h>
-#include "XInput.h"
+// workaround because of Arduino IDEs compilation units
+#include "XInput_impl.h"
+
+XInputController XInput;
 
 // Setup
 #define UseLeftJoystick 0  // set to 1 to enable left joystick
@@ -163,13 +166,16 @@ void setup() {
 
 	//XInput.setAutoSend(false);  // Wait for all controls before sending
 
+	XInputUSB::setRecvCallback(
+		[](){XInput.receive();}
+	);
 	XInput.begin();
 }
 
 static inline void computeTriggerValue(const XInputMap_Trigger &control_trigger, const uint8_t pin_Trigger) {
 	// Read trigger buttons
 	#if UseTriggerButtons == 1
-	auto triggerValue  = !digitalRead(pin_Trigger) ? ADC_Max : 0;
+	auto triggerValue = !digitalRead(pin_Trigger) ? ADC_Max : 0;
 	#else
 	// Read trigger potentiometer values
 	auto triggerValue = analogRead(pin_Trigger);
@@ -178,6 +184,11 @@ static inline void computeTriggerValue(const XInputMap_Trigger &control_trigger,
 	XInput.setTrigger(control_trigger, triggerValue);
 }
 
+/**
+"Only two switches exhibited bounces exceeding 6200 μsec. Switch E, what seemed like a
+nice red pushbutton, had a worst case bounce when it opened of 157 msec – almost a 1/6
+of a second! Yuk. Yet it never exceeded a 20 μsec bounce when closed." - https://my.eng.utah.edu/~cs5780/debouncing.pdf A Guide to Debouncing, Jack G. Ganssle
+**/
 void loop() {
 	// Read pin values and store in variables
 	// (Note the "!" to invert the state, because LOW = pressed)
@@ -203,19 +214,19 @@ void loop() {
   #endif
 
 	// Set XInput buttons
-	XInput.setButton(*XInputController::getButtonFromEnum(BUTTON_A), Pin_ButtonA.lastState);
-	XInput.setButton(*XInputController::getButtonFromEnum(BUTTON_B), Pin_ButtonB.lastState);
-	XInput.setButton(*XInputController::getButtonFromEnum(BUTTON_X), Pin_ButtonX.lastState);
-	XInput.setButton(*XInputController::getButtonFromEnum(BUTTON_Y), Pin_ButtonY.lastState);
+	XInput.setButton(XInputController::Map_ButtonA, Pin_ButtonA.lastState);
+	XInput.setButton(XInputController::Map_ButtonB, Pin_ButtonB.lastState);
+	XInput.setButton(XInputController::Map_ButtonX, Pin_ButtonX.lastState);
+	XInput.setButton(XInputController::Map_ButtonY, Pin_ButtonY.lastState);
 
-	XInput.setButton(*XInputController::getButtonFromEnum(BUTTON_LB), Pin_ButtonLB.lastState);
-	XInput.setButton(*XInputController::getButtonFromEnum(BUTTON_RB), Pin_ButtonRB.lastState);
+	XInput.setButton(XInputController::Map_ButtonLB, Pin_ButtonLB.lastState);
+	XInput.setButton(XInputController::Map_ButtonRB, Pin_ButtonRB.lastState);
 
-	XInput.setButton(*XInputController::getButtonFromEnum(BUTTON_BACK), Pin_ButtonBack.lastState);
-	XInput.setButton(*XInputController::getButtonFromEnum(BUTTON_START), Pin_ButtonStart.lastState);
+	XInput.setButton(XInputController::Map_ButtonBack, Pin_ButtonBack.lastState);
+	XInput.setButton(XInputController::Map_ButtonStart, Pin_ButtonStart.lastState);
 
-	XInput.setButton(*XInputController::getButtonFromEnum(BUTTON_L3), Pin_ButtonL3.lastState);
-	XInput.setButton(*XInputController::getButtonFromEnum(BUTTON_R3), Pin_ButtonR3.lastState);
+	XInput.setButton(XInputController::Map_ButtonL3, Pin_ButtonL3.lastState);
+	XInput.setButton(XInputController::Map_ButtonR3, Pin_ButtonR3.lastState);
 
   #if ProcessDpadButtons == 1
 	// Set XInput DPAD values
@@ -224,8 +235,8 @@ void loop() {
 
 	// Set XInput trigger values
 
-	computeTriggerValue(*XInputController::getTriggerFromEnum(TRIGGER_LEFT), Pin_TriggerL);
-	computeTriggerValue(*XInputController::getTriggerFromEnum(TRIGGER_LEFT), Pin_TriggerL);
+	computeTriggerValue(XInput.Map_TriggerLeft, Pin_TriggerL);
+	computeTriggerValue(XInput.Map_TriggerRight, Pin_TriggerR);
 
 	// Set left joystick
 	#if UseLeftJoystick == 1
