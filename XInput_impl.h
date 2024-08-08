@@ -100,6 +100,14 @@ const XInputMap_Rumble XInputController::RumbleRight(4, 1);  // Small motor
 // XInputController Class (API)                           |
 // --------------------------------------------------------
 
+/**
+ * You need to manually register XInput_USB's recvCallback because of C/C++ shortcomings:
+ * Can't bind (non-global) variables to closure if used as C function pointer.
+ * 
+ * Variable needs to be global.
+**/
+#define XInput_USB_enable(XInput)     XInputUSB::setRecvCallback([](){XInput.receive();})
+
 XInputController::XInputController() :
 	triggerInputRange(XInputMap_Trigger::outputRange),
 	Map_TriggerLeft(4, &triggerInputRange), Map_TriggerRight(5, &triggerInputRange),
@@ -114,16 +122,11 @@ XInputController::XInputController() :
 	// --------------------------------------------------------
 	// XInput USB Receive Callback                            |
 	// --------------------------------------------------------
-//	XInputUSB::setRecvCallback(
-//		[this](){this->receive();}
-//	);
+	//XInput_USB_enable(this);
 	while(this->receive());  // flush USB OUT buffer
 #endif
 }
 
-/**
- * You need to manually register XInput_USB's recvCallback because of C/C++ shortcomings
-**/
 inline void XInputController::begin() {
 	// Empty for now
 }

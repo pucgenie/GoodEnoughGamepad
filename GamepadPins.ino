@@ -79,8 +79,8 @@ struct Pin_State {
 #endif
 
 // Trigger Pins
-static const uint8_t Pin_TriggerL = 14;
-static const uint8_t Pin_TriggerR = 15;
+static const uint8_t Pin_TriggerL = 40;
+static const uint8_t Pin_TriggerR = 41;
 
 #if UseTriggerButtons == 1
 	// less complexity here
@@ -90,26 +90,26 @@ static const uint8_t Pin_TriggerR = 15;
 #endif
 
 // Button Pins
-static struct Pin_State Pin_ButtonA = {pinNumber: 2, lastState: true};
-static struct Pin_State Pin_ButtonB = {pinNumber: 3, lastState: true};
-static struct Pin_State Pin_ButtonX = {pinNumber: 4, lastState: true};
-static struct Pin_State Pin_ButtonY = {pinNumber: 5, lastState: true};
-static struct Pin_State Pin_ButtonLB = {pinNumber: 6, lastState: true};
-static struct Pin_State Pin_ButtonRB = {pinNumber: 7, lastState: true};
-static struct Pin_State Pin_ButtonBack  = {pinNumber: 8, lastState: true};
-static struct Pin_State Pin_ButtonStart = {pinNumber: 9, lastState: true};
-static struct Pin_State Pin_ButtonL3 = {pinNumber: 10, lastState: true};
-static struct Pin_State Pin_ButtonR3 = {pinNumber: 16, lastState: true};
+static struct Pin_State Pin_ButtonA     = {pinNumber: 2, lastState: true};
+static struct Pin_State Pin_ButtonB     = {pinNumber: 3, lastState: true};
+static struct Pin_State Pin_ButtonX     = {pinNumber: 4, lastState: true};
+static struct Pin_State Pin_ButtonY     = {pinNumber: 5, lastState: true};
+static struct Pin_State Pin_ButtonLB    = {pinNumber: 6, lastState: true};
+static struct Pin_State Pin_ButtonRB    = {pinNumber: 7, lastState: true};
+static struct Pin_State Pin_ButtonBack  = {pinNumber: 0, lastState: true};
+static struct Pin_State Pin_ButtonStart = {pinNumber: 1, lastState: true};
+static struct Pin_State Pin_ButtonL3    = {pinNumber: 8, lastState: true};
+static struct Pin_State Pin_ButtonR3    = {pinNumber: 9, lastState: true};
 // button LOGO unused by design.
 
 // Directional Pad Pins
-#define ProcessDpadButtons 0
+#define ProcessDpadButtons 1
 
 #if ProcessDpadButtons == 1
-	static struct Pin_State Pin_DpadUp    = {pinNumber: 0, lastState: true};
-	static struct Pin_State Pin_DpadDown  = {pinNumber: 1, lastState: true};
-	static struct Pin_State Pin_DpadLeft  = {pinNumber: 40, lastState: true};
-	static struct Pin_State Pin_DpadRight = {pinNumber: 41, lastState: true};
+	static struct Pin_State Pin_DpadLeft  = {pinNumber: 10, lastState: true};
+	static struct Pin_State Pin_DpadDown  = {pinNumber: 16, lastState: true};
+	static struct Pin_State Pin_DpadUp    = {pinNumber: 14, lastState: true};
+	static struct Pin_State Pin_DpadRight = {pinNumber: 15, lastState: true};
 #endif
 
 static XInputController XInput;
@@ -174,10 +174,7 @@ void setup() {
 
 	//XInput.setAutoSend(false);  // Wait for all controls before sending
 
-	XInputUSB::setRecvCallback(
-		// can't bind (non-global) variables to closure if used as C function pointer
-		[](){XInput.receive();}
-	);
+	XInput_USB_enable(XInput);
 	XInput.begin();
 }
 
