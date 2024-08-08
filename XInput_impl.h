@@ -56,22 +56,22 @@
 	#endif
 #endif /* if supported board */
 
-static const XInputMap_Button XInputController::Map_DpadUp(2, 0);
-static const XInputMap_Button XInputController::Map_DpadDown(2, 1);
-static const XInputMap_Button XInputController::Map_DpadLeft(2, 2);
-static const XInputMap_Button XInputController::Map_DpadRight(2, 3);
-static const XInputMap_Button XInputController::Map_ButtonStart(2, 4);
-static const XInputMap_Button XInputController::Map_ButtonBack(2, 5);
-static const XInputMap_Button XInputController::Map_ButtonL3(2, 6);
-static const XInputMap_Button XInputController::Map_ButtonR3(2, 7);
+const XInputMap_Button XInputController::Map_DpadUp(2, 0);
+const XInputMap_Button XInputController::Map_DpadDown(2, 1);
+const XInputMap_Button XInputController::Map_DpadLeft(2, 2);
+const XInputMap_Button XInputController::Map_DpadRight(2, 3);
+const XInputMap_Button XInputController::Map_ButtonStart(2, 4);
+const XInputMap_Button XInputController::Map_ButtonBack(2, 5);
+const XInputMap_Button XInputController::Map_ButtonL3(2, 6);
+const XInputMap_Button XInputController::Map_ButtonR3(2, 7);
 
-static const XInputMap_Button XInputController::Map_ButtonLB(3, 0);
-static const XInputMap_Button XInputController::Map_ButtonRB(3, 1);
-static const XInputMap_Button XInputController::Map_ButtonLogo(3, 2);
-static const XInputMap_Button XInputController::Map_ButtonA(3, 4);
-static const XInputMap_Button XInputController::Map_ButtonB(3, 5);
-static const XInputMap_Button XInputController::Map_ButtonX(3, 6);
-static const XInputMap_Button XInputController::Map_ButtonY(3, 7);
+const XInputMap_Button XInputController::Map_ButtonLB(3, 0);
+const XInputMap_Button XInputController::Map_ButtonRB(3, 1);
+const XInputMap_Button XInputController::Map_ButtonLogo(3, 2);
+const XInputMap_Button XInputController::Map_ButtonA(3, 4);
+const XInputMap_Button XInputController::Map_ButtonB(3, 5);
+const XInputMap_Button XInputController::Map_ButtonX(3, 6);
+const XInputMap_Button XInputController::Map_ButtonY(3, 7);
 
 const XIRange XInputMap_Trigger::outputRange = { 0, 255 };  // uint8_t
 
@@ -87,9 +87,6 @@ static XIRange TriggerRange; // default
 
 const XIRange XInputMap_Joystick::outputRange = { -32768, 32767 };  // int16_t
 
-static XInputMap_Joystick Map_JoystickLeft(6, 7, 8, 9, new XIRange());
-static XInputMap_Joystick Map_JoystickRight(10, 11, 12, 13, Map_JoystickLeft.inputRange);
-
 // static const XInputMap_Joystick * XInputController::getJoyFromEnum(const XInputControl ctrl) {
 // 	switch (ctrl) {
 // 	case(JOY_LEFT): return &Map_JoystickLeft;
@@ -98,28 +95,18 @@ static XInputMap_Joystick Map_JoystickRight(10, 11, 12, 13, Map_JoystickLeft.inp
 // 	}
 // }
 
-// --------------------------------------------------------
-// XInput Rumble Maps                                     |
-// (Stores rx index and buffer index for each motor)      |
-// --------------------------------------------------------
-
-struct XInputMap_Rumble {
-	constexpr XInputMap_Rumble(const uint8_t rIndex, const uint8_t bIndex)
-		: rxIndex(rIndex), bufferIndex(bIndex) {}
-	const uint8_t rxIndex     :4;
-	const uint8_t bufferIndex :4;
-};
-
-static const XInputMap_Rumble RumbleLeft(3, 0);   // Large motor
-static const XInputMap_Rumble RumbleRight(4, 1);  // Small motor
+const XInputMap_Rumble XInputController::RumbleLeft(3, 0);   // Large motor
+const XInputMap_Rumble XInputController::RumbleRight(4, 1);  // Small motor
 
 // --------------------------------------------------------
 // XInputController Class (API)                           |
 // --------------------------------------------------------
 
-XInputController::XInputController() :
-	tx(), rumble(), // Zero initialize arrays
-	Map_TriggerLeft(4, &TriggerRange), Map_TriggerRight(5, Map_TriggerLeft.inputRange)
+XInputController::XInputController(XIRange& joystickInputRange) :
+	Map_TriggerLeft(4, &TriggerRange), Map_TriggerRight(5, Map_TriggerLeft.inputRange),
+	joystickInputRange(joystickInputRange),
+	Map_JoystickLeft(6, 7, 8, 9, &joystickInputRange), Map_JoystickRight(10, 11, 12, 13, &joystickInputRange),
+	tx(), rumble() // Zero initialize arrays
 {
 	tx[0] = 0x00;  // Set tx message type
 	tx[1] = 0x14;  // Set tx packet size (20)

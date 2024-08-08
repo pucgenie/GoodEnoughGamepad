@@ -47,7 +47,8 @@
 // workaround because of Arduino IDEs compilation units
 #include "XInput_impl.h"
 
-XInputController XInput;
+static XIRange joystickInputRange;
+static XInputController XInput(joystickInputRange);
 
 // Setup
 #define UseLeftJoystick 0  // set to 1 to enable left joystick
@@ -68,7 +69,8 @@ struct Pin_State {
 #if UseLeftJoystick == 1
 // Joystick Pins
 const uint8_t Pin_LeftJoyX  = A0;
-const uint8_t Pin_LeftJoyY  = A1;// pucgenie: don't need to zero-initialize - is always written to at first.
+const uint8_t Pin_LeftJoyY  = A1;
+// pucgenie: don't need to zero-initialize - is always written to at first.
 int16_t joyLeftOld[2];
 #endif
 #if UseRightJoystick == 1
@@ -85,26 +87,25 @@ const uint8_t Pin_TriggerR = 15;
 uint8_t triggerOld[2];
 
 // Button Pins
-// pucgenie: don't need to false-initialize lastState - is always written to at first.
-struct Pin_State Pin_ButtonA = {pinNumber: 2};
-struct Pin_State Pin_ButtonB = {pinNumber: 3};
-struct Pin_State Pin_ButtonX = {pinNumber: 4};
-struct Pin_State Pin_ButtonY = {pinNumber: 5};
-struct Pin_State Pin_ButtonLB = {pinNumber: 6};
-struct Pin_State Pin_ButtonRB = {pinNumber: 7};
-struct Pin_State Pin_ButtonBack  = {pinNumber: 8};
-struct Pin_State Pin_ButtonStart = {pinNumber: 9};
-struct Pin_State Pin_ButtonL3 = {pinNumber: 10};
-struct Pin_State Pin_ButtonR3 = {pinNumber: 16};
+struct Pin_State Pin_ButtonA = {pinNumber: 2, lastState: false};
+struct Pin_State Pin_ButtonB = {pinNumber: 3, lastState: false};
+struct Pin_State Pin_ButtonX = {pinNumber: 4, lastState: false};
+struct Pin_State Pin_ButtonY = {pinNumber: 5, lastState: false};
+struct Pin_State Pin_ButtonLB = {pinNumber: 6, lastState: false};
+struct Pin_State Pin_ButtonRB = {pinNumber: 7, lastState: false};
+struct Pin_State Pin_ButtonBack  = {pinNumber: 8, lastState: false};
+struct Pin_State Pin_ButtonStart = {pinNumber: 9, lastState: false};
+struct Pin_State Pin_ButtonL3 = {pinNumber: 10, lastState: false};
+struct Pin_State Pin_ButtonR3 = {pinNumber: 16, lastState: false};
 // button LOGO unused by design.
 
 // Directional Pad Pins
 #define ProcessDpadButtons 0
 #if ProcessDpadButtons == 1
-struct Pin_State Pin_DpadUp    = {pinNumber: 0};
-struct Pin_State Pin_DpadDown  = {pinNumber: 1};
-struct Pin_State Pin_DpadLeft  = {pinNumber: 40};
-struct Pin_State Pin_DpadRight = {pinNumber: 41};
+struct Pin_State Pin_DpadUp    = {pinNumber: 0, lastState: false};
+struct Pin_State Pin_DpadDown  = {pinNumber: 1, lastState: false};
+struct Pin_State Pin_DpadLeft  = {pinNumber: 40, lastState: false};
+struct Pin_State Pin_DpadRight = {pinNumber: 41, lastState: false};
 #endif
 
 

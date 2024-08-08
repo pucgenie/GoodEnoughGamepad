@@ -117,9 +117,21 @@ struct XInputMap_Joystick {
 	XIRange *inputRange;
 };
 
+// --------------------------------------------------------
+// XInput Rumble Maps                                     |
+// (Stores rx index and buffer index for each motor)      |
+// --------------------------------------------------------
+
+struct XInputMap_Rumble {
+	constexpr XInputMap_Rumble(const uint8_t rIndex, const uint8_t bIndex)
+		: rxIndex(rIndex), bufferIndex(bIndex) {}
+	const uint8_t rxIndex     :4;
+	const uint8_t bufferIndex :4;
+};
+
 class XInputController {
 public:
-	XInputController();
+	XInputController(XIRange& joystickInputRange);
 
 	void begin();
 
@@ -192,8 +204,15 @@ public:
 	static const XInputMap_Button Map_ButtonX;
 	static const XInputMap_Button Map_ButtonY;
 
+	static const XInputMap_Rumble RumbleLeft;
+	static const XInputMap_Rumble RumbleRight;
+
 	XInputMap_Trigger Map_TriggerLeft;
 	XInputMap_Trigger Map_TriggerRight;
+
+	XIRange joystickInputRange;
+	XInputMap_Joystick Map_JoystickLeft;
+	XInputMap_Joystick Map_JoystickRight;
 
 private:
 	// Sent Data
