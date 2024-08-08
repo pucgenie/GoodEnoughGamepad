@@ -66,16 +66,16 @@ struct Pin_State {
 };
 
 #if UseLeftJoystick == 1
-// Joystick Pins
-static const uint8_t Pin_LeftJoyX  = A0;
-static const uint8_t Pin_LeftJoyY  = A1;
-// pucgenie: don't need to zero-initialize - is always written to at first.
-static int16_t joyLeftOld[2];
+	// Joystick Pins
+	static const uint8_t Pin_LeftJoyX  = A0;
+	static const uint8_t Pin_LeftJoyY  = A1;
+	// pucgenie: don't need to zero-initialize - is always written to at first.
+	static int16_t joyLeftOld[2];
 #endif
 #if UseRightJoystick == 1
-static const uint8_t Pin_RightJoyX = A2;
-static const uint8_t Pin_RightJoyY = A3;
-static int16_t joyRightOld[2];
+	static const uint8_t Pin_RightJoyX = A2;
+	static const uint8_t Pin_RightJoyY = A3;
+	static int16_t joyRightOld[2];
 #endif
 
 // Trigger Pins
@@ -104,11 +104,12 @@ static struct Pin_State Pin_ButtonR3 = {pinNumber: 16, lastState: true};
 
 // Directional Pad Pins
 #define ProcessDpadButtons 0
+
 #if ProcessDpadButtons == 1
-static struct Pin_State Pin_DpadUp    = {pinNumber: 0, lastState: true};
-static struct Pin_State Pin_DpadDown  = {pinNumber: 1, lastState: true};
-static struct Pin_State Pin_DpadLeft  = {pinNumber: 40, lastState: true};
-static struct Pin_State Pin_DpadRight = {pinNumber: 41, lastState: true};
+	static struct Pin_State Pin_DpadUp    = {pinNumber: 0, lastState: true};
+	static struct Pin_State Pin_DpadDown  = {pinNumber: 1, lastState: true};
+	static struct Pin_State Pin_DpadLeft  = {pinNumber: 40, lastState: true};
+	static struct Pin_State Pin_DpadRight = {pinNumber: 41, lastState: true};
 #endif
 
 static XInputController XInput;
@@ -131,11 +132,11 @@ void setup() {
 	#if UseTriggerButtons == 1
 		pinMode(Pin_TriggerL, INPUT_PULLUP);
 		pinMode(Pin_TriggerR, INPUT_PULLUP);
-    #if (UseLeftJoystick | UseRightJoystick) == 0
-    // turn off ADC (#powersaving)
-    ADCSRA = 0;
-    power_adc_disable();
-    #endif
+		#if (UseLeftJoystick | UseRightJoystick) == 0
+			// turn off ADC (#powersaving)
+			ADCSRA = 0;
+			power_adc_disable();
+		#endif
 	#else // If using potentiometers for the triggers, set range
 		auto &triggerRange = XInput.triggerInputRange;
 		triggerRange.min = 0;
@@ -157,12 +158,12 @@ void setup() {
 	pinMode(Pin_ButtonL3.pinNumber, INPUT_PULLUP);
 	pinMode(Pin_ButtonR3.pinNumber, INPUT_PULLUP);
 
-  #if ProcessDpadButtons == 1
-	pinMode(Pin_DpadUp.pinNumber, INPUT_PULLUP);
-	pinMode(Pin_DpadDown.pinNumber, INPUT_PULLUP);
-	pinMode(Pin_DpadLeft.pinNumber, INPUT_PULLUP);
-	pinMode(Pin_DpadRight.pinNumber, INPUT_PULLUP);
-  #endif
+	#if ProcessDpadButtons == 1
+		pinMode(Pin_DpadUp.pinNumber, INPUT_PULLUP);
+		pinMode(Pin_DpadDown.pinNumber, INPUT_PULLUP);
+		pinMode(Pin_DpadLeft.pinNumber, INPUT_PULLUP);
+		pinMode(Pin_DpadRight.pinNumber, INPUT_PULLUP);
+	#endif
 
 	#if (UseLeftJoystick | UseRightJoystick)
 	// Set joystick range to the ADC
@@ -183,12 +184,12 @@ void setup() {
 static inline void computeTriggerValue(const XInputMap_Trigger &control_trigger, const uint8_t pin_Trigger) {
 	// Read trigger buttons
 	#if UseTriggerButtons == 1
-	// pucgenie: cancel-out remapping values by directly using outputRange values
-	// high->min, low->max
-	auto triggerValue = digitalRead(pin_Trigger) ? XInputMap_Joystick::outputRange.min : XInputMap_Joystick::outputRange.max;
+		// pucgenie: cancel-out remapping values by directly using outputRange values
+		// high->min, low->max
+		auto triggerValue = digitalRead(pin_Trigger) ? XInputMap_Joystick::outputRange.min : XInputMap_Joystick::outputRange.max;
 	#else
-	// Read trigger potentiometer values
-	auto triggerValue = analogRead(pin_Trigger);
+		// Read trigger potentiometer values
+		auto triggerValue = analogRead(pin_Trigger);
 	#endif
 	
 	XInput.setTrigger(control_trigger, triggerValue);
@@ -202,46 +203,46 @@ of a second! Yuk. Yet it never exceeded a 20 μsec bounce when closed." - https:
 void loop() {
 	// Read pin values and store in variables
 	// (Note the "!" to invert the state, because LOW = pressed)
-	Pin_ButtonA.lastState = !digitalRead(Pin_ButtonA.pinNumber);
-	Pin_ButtonB.lastState = !digitalRead(Pin_ButtonB.pinNumber);
-	Pin_ButtonX.lastState = !digitalRead(Pin_ButtonX.pinNumber);
-	Pin_ButtonY.lastState = !digitalRead(Pin_ButtonY.pinNumber);
+	Pin_ButtonA.lastState = digitalRead(Pin_ButtonA.pinNumber);
+	Pin_ButtonB.lastState = digitalRead(Pin_ButtonB.pinNumber);
+	Pin_ButtonX.lastState = digitalRead(Pin_ButtonX.pinNumber);
+	Pin_ButtonY.lastState = digitalRead(Pin_ButtonY.pinNumber);
 
-	Pin_ButtonLB.lastState = !digitalRead(Pin_ButtonLB.pinNumber);
-	Pin_ButtonRB.lastState = !digitalRead(Pin_ButtonRB.pinNumber);
+	Pin_ButtonLB.lastState = digitalRead(Pin_ButtonLB.pinNumber);
+	Pin_ButtonRB.lastState = digitalRead(Pin_ButtonRB.pinNumber);
 
-	Pin_ButtonBack.lastState  = !digitalRead(Pin_ButtonBack.pinNumber);
-	Pin_ButtonStart.lastState = !digitalRead(Pin_ButtonStart.pinNumber);
+	Pin_ButtonBack.lastState  = digitalRead(Pin_ButtonBack.pinNumber);
+	Pin_ButtonStart.lastState = digitalRead(Pin_ButtonStart.pinNumber);
 
-	Pin_ButtonL3.lastState = !digitalRead(Pin_ButtonL3.pinNumber);
-	Pin_ButtonR3.lastState = !digitalRead(Pin_ButtonR3.pinNumber);
+	Pin_ButtonL3.lastState = digitalRead(Pin_ButtonL3.pinNumber);
+	Pin_ButtonR3.lastState = digitalRead(Pin_ButtonR3.pinNumber);
 
-  #if ProcessDpadButtons == 1
-	Pin_DpadUp.lastState    = !digitalRead(Pin_DpadUp.pinNumber);
-	Pin_DpadDown.lastState  = !digitalRead(Pin_DpadDown.pinNumber);
-	Pin_DpadLeft.lastState  = !digitalRead(Pin_DpadLeft.pinNumber);
-	Pin_DpadRight.lastState = !digitalRead(Pin_DpadRight.pinNumber);
-  #endif
+	#if ProcessDpadButtons == 1
+		Pin_DpadUp.lastState    = digitalRead(Pin_DpadUp.pinNumber);
+		Pin_DpadDown.lastState  = digitalRead(Pin_DpadDown.pinNumber);
+		Pin_DpadLeft.lastState  = digitalRead(Pin_DpadLeft.pinNumber);
+		Pin_DpadRight.lastState = digitalRead(Pin_DpadRight.pinNumber);
+	#endif
 
 	// Set XInput buttons
-	XInput.setButton(XInputController::Map_ButtonA, Pin_ButtonA.lastState);
-	XInput.setButton(XInputController::Map_ButtonB, Pin_ButtonB.lastState);
-	XInput.setButton(XInputController::Map_ButtonX, Pin_ButtonX.lastState);
-	XInput.setButton(XInputController::Map_ButtonY, Pin_ButtonY.lastState);
+	XInput.setButton(XInputController::Map_ButtonA, !Pin_ButtonA.lastState);
+	XInput.setButton(XInputController::Map_ButtonB, !Pin_ButtonB.lastState);
+	XInput.setButton(XInputController::Map_ButtonX, !Pin_ButtonX.lastState);
+	XInput.setButton(XInputController::Map_ButtonY, !Pin_ButtonY.lastState);
 
-	XInput.setButton(XInputController::Map_ButtonLB, Pin_ButtonLB.lastState);
-	XInput.setButton(XInputController::Map_ButtonRB, Pin_ButtonRB.lastState);
+	XInput.setButton(XInputController::Map_ButtonLB, !Pin_ButtonLB.lastState);
+	XInput.setButton(XInputController::Map_ButtonRB, !Pin_ButtonRB.lastState);
 
-	XInput.setButton(XInputController::Map_ButtonBack, Pin_ButtonBack.lastState);
-	XInput.setButton(XInputController::Map_ButtonStart, Pin_ButtonStart.lastState);
+	XInput.setButton(XInputController::Map_ButtonBack, !Pin_ButtonBack.lastState);
+	XInput.setButton(XInputController::Map_ButtonStart, !Pin_ButtonStart.lastState);
 
-	XInput.setButton(XInputController::Map_ButtonL3, Pin_ButtonL3.lastState);
-	XInput.setButton(XInputController::Map_ButtonR3, Pin_ButtonR3.lastState);
+	XInput.setButton(XInputController::Map_ButtonL3, !Pin_ButtonL3.lastState);
+	XInput.setButton(XInputController::Map_ButtonR3, !Pin_ButtonR3.lastState);
 
-  #if ProcessDpadButtons == 1
-	// Set XInput DPAD values
-	XInput.setDpad(Pin_DpadUp.lastState, Pin_DpadDown.lastState, Pin_DpadLeft.lastState, Pin_DpadRight.lastState);
-  #endif
+	#if ProcessDpadButtons == 1
+		// Set XInput DPAD values
+		XInput.setDpad(!Pin_DpadUp.lastState, !Pin_DpadDown.lastState, !Pin_DpadLeft.lastState, !Pin_DpadRight.lastState);
+	#endif
 
 	// Set XInput trigger values
 
@@ -250,7 +251,7 @@ void loop() {
 
 	// Set left joystick
 	#if UseLeftJoystick == 1
-  {
+	{
 		int leftJoyX = analogRead(Pin_LeftJoyX);
 		int leftJoyY = analogRead(Pin_LeftJoyY);
 
@@ -260,34 +261,50 @@ void loop() {
 
 		XInput.setJoystickX(XInput.Map_JOY_LEFT, leftJoyX);
 		XInput.setJoystickY(XInput.Map_JOY_LEFT, leftJoyY, !InvertLeftYAxis);
-  }
+	}
 	#endif
 
 	// Set right joystick
 	#if UseRightJoystick == 1
-  {
+	{
 		int rightJoyX = analogRead(Pin_RightJoyX);
 		int rightJoyY = analogRead(Pin_RightJoyY);
 
 		XInput.setJoystickX(XInput.Map_JOY_RIGHT, rightJoyX);
 		XInput.setJoystickY(XInput.Map_JOY_RIGHT, rightJoyY, !InvertRightYAxis);
-  }
+	}
 	#endif
+
+	#ifndef COMPLETELY_UNTOUCH_TIMER1
+		OCR1A = 8;
+		// OCR1A: how many scaled ticks to count
+		TCNT1 = 0; // reset timer
+		// Output Compare Match A Interrupt Enable
+		TIMSK1 |= (1 << OCIE1A);
+
+		set_sleep_mode(SLEEP_MODE_IDLE);
+		sleep_enable();
+		sleep_mode();
+		sleep_disable();
+	#endif
+
+	// TODO: read again and calculate debouncing/filtering
 
 	// TODO: reflex fine-tune
 	// pucgenie: without SerialUSB, measuring time is complicated.
 	// 13 : 11 should be good, but I don't know.
-	OCR1A = XInput.send() == 0 ? 12 : 10;
+	if (XInput.send() == 0) {
+		#ifndef COMPLETELY_UNTOUCH_TIMER1
+			OCR1A = 2;
+			// OCR1A: how many scaled ticks to count
+			TCNT1 = 0; // reset timer
+			// Output Compare Match A Interrupt Enable
+			TIMSK1 |= (1 << OCIE1A);
 
-	#ifndef COMPLETELY_UNTOUCH_TIMER1
-    // OCR1A: how many scaled ticks to count
-    TCNT1 = 0; // reset timer
-    // Output Compare Match A Interrupt Enable
-    TIMSK1 |= (1 << OCIE1A);
-
-    set_sleep_mode(SLEEP_MODE_IDLE);
-    sleep_enable();
-    sleep_mode();
-    sleep_disable();
-  #endif
+			set_sleep_mode(SLEEP_MODE_IDLE);
+			sleep_enable();
+			sleep_mode();
+			sleep_disable();
+		#endif
+	}
 }
