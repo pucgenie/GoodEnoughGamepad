@@ -57,10 +57,11 @@ static const boolean InvertRightYAxis  = false;  // set to true to use inverted 
 
 #define UseTriggerButtons 1   // set to 0 if using analog triggers
 
-#define ADC_Max 0b0000001111111111  // 10 bit
+#define ADC_Max 0b0000001111111111  // 10 bits
 
 struct Pin_State {
 	const uint8_t pinNumber;
+	// high or low. 1-cycle-access (don't use bit-manipulation or :1;)
 	boolean lastState;
 };
 
@@ -89,25 +90,25 @@ static const uint8_t Pin_TriggerR = 15;
 #endif
 
 // Button Pins
-static struct Pin_State Pin_ButtonA = {pinNumber: 2, lastState: false};
-static struct Pin_State Pin_ButtonB = {pinNumber: 3, lastState: false};
-static struct Pin_State Pin_ButtonX = {pinNumber: 4, lastState: false};
-static struct Pin_State Pin_ButtonY = {pinNumber: 5, lastState: false};
-static struct Pin_State Pin_ButtonLB = {pinNumber: 6, lastState: false};
-static struct Pin_State Pin_ButtonRB = {pinNumber: 7, lastState: false};
-static struct Pin_State Pin_ButtonBack  = {pinNumber: 8, lastState: false};
-static struct Pin_State Pin_ButtonStart = {pinNumber: 9, lastState: false};
-static struct Pin_State Pin_ButtonL3 = {pinNumber: 10, lastState: false};
-static struct Pin_State Pin_ButtonR3 = {pinNumber: 16, lastState: false};
+static struct Pin_State Pin_ButtonA = {pinNumber: 2, lastState: true};
+static struct Pin_State Pin_ButtonB = {pinNumber: 3, lastState: true};
+static struct Pin_State Pin_ButtonX = {pinNumber: 4, lastState: true};
+static struct Pin_State Pin_ButtonY = {pinNumber: 5, lastState: true};
+static struct Pin_State Pin_ButtonLB = {pinNumber: 6, lastState: true};
+static struct Pin_State Pin_ButtonRB = {pinNumber: 7, lastState: true};
+static struct Pin_State Pin_ButtonBack  = {pinNumber: 8, lastState: true};
+static struct Pin_State Pin_ButtonStart = {pinNumber: 9, lastState: true};
+static struct Pin_State Pin_ButtonL3 = {pinNumber: 10, lastState: true};
+static struct Pin_State Pin_ButtonR3 = {pinNumber: 16, lastState: true};
 // button LOGO unused by design.
 
 // Directional Pad Pins
 #define ProcessDpadButtons 0
 #if ProcessDpadButtons == 1
-static struct Pin_State Pin_DpadUp    = {pinNumber: 0, lastState: false};
-static struct Pin_State Pin_DpadDown  = {pinNumber: 1, lastState: false};
-static struct Pin_State Pin_DpadLeft  = {pinNumber: 40, lastState: false};
-static struct Pin_State Pin_DpadRight = {pinNumber: 41, lastState: false};
+static struct Pin_State Pin_DpadUp    = {pinNumber: 0, lastState: true};
+static struct Pin_State Pin_DpadDown  = {pinNumber: 1, lastState: true};
+static struct Pin_State Pin_DpadLeft  = {pinNumber: 40, lastState: true};
+static struct Pin_State Pin_DpadRight = {pinNumber: 41, lastState: true};
 #endif
 
 static XInputController XInput;
@@ -136,7 +137,9 @@ void setup() {
     power_adc_disable();
     #endif
 	#else // If using potentiometers for the triggers, set range
-		XInput.setTriggerRange(0, ADC_Max);
+		auto &triggerRange = XInput.triggerInputRange;
+		triggerRange.min = 0;
+		triggerRange.max = ADC_Max;
 	#endif
 
 	// Set buttons as inputs, using internal pull-up resistors
@@ -163,9 +166,9 @@ void setup() {
 
 	#if (UseLeftJoystick | UseRightJoystick)
 	// Set joystick range to the ADC
-	auto joyRange const = XInput.joystickInputRange;
-	joyRange->min = 0;
-	joyRange->max = ADC_Max;
+	auto &joyRange = XInput.joystickInputRange;
+	joyRange.min = 0;
+	joyRange.max = ADC_Max;
 	#endif
 
 	//XInput.setAutoSend(false);  // Wait for all controls before sending
@@ -180,7 +183,9 @@ void setup() {
 static inline void computeTriggerValue(const XInputMap_Trigger &control_trigger, const uint8_t pin_Trigger) {
 	// Read trigger buttons
 	#if UseTriggerButtons == 1
-	auto triggerValue = !digitalRead(pin_Trigger) ? ADC_Max : 0;
+	// pucgenie: cancel-out remapping values by directly using outputRange values
+	// high->min, low->max
+	auto triggerValue = digitalRead(pin_Trigger) ? XInputMap_Joystick::outputRange.min : XInputMap_Joystick::outputRange.max;
 	#else
 	// Read trigger potentiometer values
 	auto triggerValue = analogRead(pin_Trigger);
