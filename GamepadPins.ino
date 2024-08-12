@@ -56,14 +56,20 @@ static const boolean InvertLeftYAxis   = false;  // set to true to use inverted 
 static const boolean InvertRightYAxis  = false;  // set to true to use inverted right joy Y
 
 #define UseTriggerButtons 1   // set to 0 if using analog triggers
+//#define UseSOCD // Simultaneous Opposing Cardinal Directions
+// pucgenie: I'd use an input jumper for SOCD setting, but all (accessible) GPIOs are already in use.
+// pucgenie: Changing settings via serial would be nice, but XInput is constrained in that area.
+
+// Directional Pad Pins
+#define ProcessDpadButtons 1
 
 #define ADC_Max 0b0000001111111111  // 10 bits
 
 struct Pin_State {
 	const XInputMap_Button& control;
 	const uint8_t pinNumber;
-	// high or low. 1-cycle-access (don't use bit-manipulation or :1;)
-	boolean lastState;
+	// 2: high, 0: low, 1: read input again. :2 would cause more clock cycles.
+	uint8_t state;
 };
 
 static XInputController XInput;
@@ -92,30 +98,27 @@ static const uint8_t Pin_TriggerR = 41;
 	static uint8_t triggerOld[2];
 #endif
 
-// Directional Pad Pins
-#define ProcessDpadButtons 1
-
-// Button Pins. enum XInputControl = index+1
+// Button data with mapping, Pin number, state...
 static struct Pin_State PinButton[] = {
-	{control: XInputController::Map_ButtonA, pinNumber: 2, lastState: true},
-	{control: XInputController::Map_ButtonB, pinNumber: 3, lastState: true},
-	{control: XInputController::Map_ButtonX, pinNumber: 4, lastState: true},
-	{control: XInputController::Map_ButtonY, pinNumber: 5, lastState: true},
-	{control: XInputController::Map_ButtonLB, pinNumber: 6, lastState: true},
-	{control: XInputController::Map_ButtonRB, pinNumber: 7, lastState: true},
-	{control: XInputController::Map_ButtonStart, pinNumber: 0, lastState: true},
-	{control: XInputController::Map_ButtonBack, pinNumber: 1, lastState: true},
-	{control: XInputController::Map_ButtonL3, pinNumber: 8, lastState: true},
-	{control: XInputController::Map_ButtonR3, pinNumber: 9, lastState: true},
+	{control: XInputController::Map_ButtonA, pinNumber: 2, state: 0},
+	{control: XInputController::Map_ButtonB, pinNumber: 3, state: 0},
+	{control: XInputController::Map_ButtonX, pinNumber: 4, state: 0},
+	{control: XInputController::Map_ButtonY, pinNumber: 5, state: 0},
+	{control: XInputController::Map_ButtonLB, pinNumber: 6, state: 0},
+	{control: XInputController::Map_ButtonRB, pinNumber: 7, state: 0},
+	{control: XInputController::Map_ButtonStart, pinNumber: 0, state: 0},
+	{control: XInputController::Map_ButtonBack, pinNumber: 1, state: 0},
+	{control: XInputController::Map_ButtonL3, pinNumber: 8, state: 0},
+	{control: XInputController::Map_ButtonR3, pinNumber: 9, state: 0},
 // button LOGO unused by design.
 
 
 #if ProcessDpadButtons == 1
 	// There are dependencies of these controls being at the end of array PinButton[]: UseSOCD
-	{control: XInputController::Map_DpadUp, pinNumber: 14, lastState: true},
-	{control: XInputController::Map_DpadDown, pinNumber: 16, lastState: true},
-	{control: XInputController::Map_DpadLeft, pinNumber: 10, lastState: true},
-	{control: XInputController::Map_DpadRight, pinNumber: 15, lastState: true},
+	{control: XInputController::Map_DpadUp, pinNumber: 14, state: 0},
+	{control: XInputController::Map_DpadDown, pinNumber: 16, state: 0},
+	{control: XInputController::Map_DpadLeft, pinNumber: 10, state: 0},
+	{control: XInputController::Map_DpadRight, pinNumber: 15, state: 0},
 #endif
 };
 
@@ -150,7 +153,6 @@ void setup() {
 
 	// Set buttons as inputs, using internal pull-up resistors
 	for (int i = sizeof(PinButton); i --> 0;) {
-		auto abc = PinButton[i];
 		pinMode(PinButton[i].pinNumber, INPUT_PULLUP);
 	}
 
@@ -181,6 +183,23 @@ static inline void computeTriggerValue(const XInputMap_Trigger &control_trigger,
 	XInput.setTrigger(control_trigger, triggerValue);
 }
 
+// pucgenie: constant time or short-circuit? I guess distribution is biased, but in which direction?
+// static boolean medianBool(boolean a, boolean b, boolean c) {
+// 	return (a & b) | (a & c) | (b & c);
+// }
+
+static inline uint8_t rereadIfNecessary(struct Pin_State &currentPinButton) {
+	switch (currentPinButton.state) {
+		case 1:
+			currentPinButton.state = digitalRead(currentPinButton.pinNumber);
+			break;
+		case 2:
+			currentPinButton.state = 1;
+			break;
+	}
+	return currentPinButton.state;
+}
+
 /**
 "Only two switches exhibited bounces exceeding 6200 μsec. Switch E, what seemed like a
 nice red pushbutton, had a worst case bounce when it opened of 157 msec – almost a 1/6
@@ -189,30 +208,16 @@ of a second! Yuk. Yet it never exceeded a 20 μsec bounce when closed." - https:
 void loop() {
 	// Read pin values and store in variables
 	// (Note the "!" to invert the state, because LOW = pressed)
-	for (int i = sizeof(PinButton); i --> 0;) {
+	/*
+	for (uint8_t i = sizeof(PinButton); i --> 0;) {
 		struct Pin_State& currentPinButton = PinButton[i];
 		currentPinButton.lastState = digitalRead(currentPinButton.pinNumber);
 	}
-	
-	// Set XInput buttons
-	for (int i = sizeof(PinButton)
-		#ifdef UseSOCD
-		-4
-		#endif
-			; i --> 0;) {
+	*/
+	for (uint8_t i = 0; i < sizeof(PinButton); ++i) {
 		struct Pin_State& currentPinButton = PinButton[i];
-		XInput.setButton(currentPinButton.control, !currentPinButton.lastState);
+		currentPinButton.state += digitalRead(currentPinButton.pinNumber);
 	}
-
-	#if defined(UseSOCD) && ProcessDpadButtons == 1
-		// Set XInput DPAD values
-		XInput.setDpad(
-			!PinButton[sizeof(PinButton)-4].lastState,
-			!PinButton[sizeof(PinButton)-3].lastState,
-			!PinButton[sizeof(PinButton)-2].lastState,
-			!PinButton[sizeof(PinButton)-1].lastState)
-		;
-	#endif
 
 	// Set XInput trigger values
 
@@ -260,6 +265,26 @@ void loop() {
 
 	// TODO: read again and calculate debouncing/filtering
 	// joystick output = (A&&B) || (A&&C) || (B&&C) // because it doesn't matter if all three are 
+
+		// Set XInput buttons
+	for (int i = sizeof(PinButton)
+		#ifdef UseSOCD
+			-4
+		#endif
+			; i --> 0;) {
+		struct Pin_State& currentPinButton = PinButton[i];
+		XInput.setButton(currentPinButton.control, !rereadIfNecessary(currentPinButton));
+	}
+
+	#if defined(UseSOCD) && ProcessDpadButtons == 1
+		// Set XInput DPAD values
+		XInput.setDpad(
+			!rereadIfNecessary(PinButton[sizeof(PinButton)-4]),
+			!rereadIfNecessary(PinButton[sizeof(PinButton)-3]),
+			!rereadIfNecessary(PinButton[sizeof(PinButton)-2]),
+			!rereadIfNecessary(PinButton[sizeof(PinButton)-1]))
+		;
+	#endif
 
 	// TODO: reflex fine-tune
 	// pucgenie: without SerialUSB, measuring time is complicated.
