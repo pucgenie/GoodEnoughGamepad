@@ -60,10 +60,13 @@ static const boolean InvertRightYAxis  = false;  // set to true to use inverted 
 #define ADC_Max 0b0000001111111111  // 10 bits
 
 struct Pin_State {
+	const XInputMap_Button& control;
 	const uint8_t pinNumber;
 	// high or low. 1-cycle-access (don't use bit-manipulation or :1;)
 	boolean lastState;
 };
+
+static XInputController XInput;
 
 #if UseLeftJoystick == 1
 	// Joystick Pins
@@ -89,30 +92,32 @@ static const uint8_t Pin_TriggerR = 41;
 	static uint8_t triggerOld[2];
 #endif
 
-// Button Pins
-static struct Pin_State Pin_ButtonA     = {pinNumber: 2, lastState: true};
-static struct Pin_State Pin_ButtonB     = {pinNumber: 3, lastState: true};
-static struct Pin_State Pin_ButtonX     = {pinNumber: 4, lastState: true};
-static struct Pin_State Pin_ButtonY     = {pinNumber: 5, lastState: true};
-static struct Pin_State Pin_ButtonLB    = {pinNumber: 6, lastState: true};
-static struct Pin_State Pin_ButtonRB    = {pinNumber: 7, lastState: true};
-static struct Pin_State Pin_ButtonBack  = {pinNumber: 0, lastState: true};
-static struct Pin_State Pin_ButtonStart = {pinNumber: 1, lastState: true};
-static struct Pin_State Pin_ButtonL3    = {pinNumber: 8, lastState: true};
-static struct Pin_State Pin_ButtonR3    = {pinNumber: 9, lastState: true};
-// button LOGO unused by design.
-
 // Directional Pad Pins
 #define ProcessDpadButtons 1
 
-#if ProcessDpadButtons == 1
-	static struct Pin_State Pin_DpadLeft  = {pinNumber: 10, lastState: true};
-	static struct Pin_State Pin_DpadDown  = {pinNumber: 16, lastState: true};
-	static struct Pin_State Pin_DpadUp    = {pinNumber: 14, lastState: true};
-	static struct Pin_State Pin_DpadRight = {pinNumber: 15, lastState: true};
-#endif
+// Button Pins. enum XInputControl = index+1
+static struct Pin_State PinButton[] = {
+	{control: XInputController::Map_ButtonA, pinNumber: 2, lastState: true},
+	{control: XInputController::Map_ButtonB, pinNumber: 3, lastState: true},
+	{control: XInputController::Map_ButtonX, pinNumber: 4, lastState: true},
+	{control: XInputController::Map_ButtonY, pinNumber: 5, lastState: true},
+	{control: XInputController::Map_ButtonLB, pinNumber: 6, lastState: true},
+	{control: XInputController::Map_ButtonRB, pinNumber: 7, lastState: true},
+	{control: XInputController::Map_ButtonStart, pinNumber: 0, lastState: true},
+	{control: XInputController::Map_ButtonBack, pinNumber: 1, lastState: true},
+	{control: XInputController::Map_ButtonL3, pinNumber: 8, lastState: true},
+	{control: XInputController::Map_ButtonR3, pinNumber: 9, lastState: true},
+// button LOGO unused by design.
 
-static XInputController XInput;
+
+#if ProcessDpadButtons == 1
+	// There are dependencies of these controls being at the end of array PinButton[]: UseSOCD
+	{control: XInputController::Map_DpadUp, pinNumber: 14, lastState: true},
+	{control: XInputController::Map_DpadDown, pinNumber: 16, lastState: true},
+	{control: XInputController::Map_DpadLeft, pinNumber: 10, lastState: true},
+	{control: XInputController::Map_DpadRight, pinNumber: 15, lastState: true},
+#endif
+};
 
 #ifndef COMPLETELY_UNTOUCH_TIMER1
   ISR(TIMER1_COMPA_vect) {
@@ -144,26 +149,10 @@ void setup() {
 	#endif
 
 	// Set buttons as inputs, using internal pull-up resistors
-	pinMode(Pin_ButtonA.pinNumber, INPUT_PULLUP);
-	pinMode(Pin_ButtonB.pinNumber, INPUT_PULLUP);
-	pinMode(Pin_ButtonX.pinNumber, INPUT_PULLUP);
-	pinMode(Pin_ButtonY.pinNumber, INPUT_PULLUP);
-
-	pinMode(Pin_ButtonLB.pinNumber, INPUT_PULLUP);
-	pinMode(Pin_ButtonRB.pinNumber, INPUT_PULLUP);
-
-	pinMode(Pin_ButtonBack.pinNumber, INPUT_PULLUP);
-	pinMode(Pin_ButtonStart.pinNumber, INPUT_PULLUP);
-
-	pinMode(Pin_ButtonL3.pinNumber, INPUT_PULLUP);
-	pinMode(Pin_ButtonR3.pinNumber, INPUT_PULLUP);
-
-	#if ProcessDpadButtons == 1
-		pinMode(Pin_DpadUp.pinNumber, INPUT_PULLUP);
-		pinMode(Pin_DpadDown.pinNumber, INPUT_PULLUP);
-		pinMode(Pin_DpadLeft.pinNumber, INPUT_PULLUP);
-		pinMode(Pin_DpadRight.pinNumber, INPUT_PULLUP);
-	#endif
+	for (int i = sizeof(PinButton); i --> 0;) {
+		auto abc = PinButton[i];
+		pinMode(PinButton[i].pinNumber, INPUT_PULLUP);
+	}
 
 	#if (UseLeftJoystick | UseRightJoystick)
 	// Set joystick range to the ADC
@@ -200,45 +189,29 @@ of a second! Yuk. Yet it never exceeded a 20 μsec bounce when closed." - https:
 void loop() {
 	// Read pin values and store in variables
 	// (Note the "!" to invert the state, because LOW = pressed)
-	Pin_ButtonA.lastState = digitalRead(Pin_ButtonA.pinNumber);
-	Pin_ButtonB.lastState = digitalRead(Pin_ButtonB.pinNumber);
-	Pin_ButtonX.lastState = digitalRead(Pin_ButtonX.pinNumber);
-	Pin_ButtonY.lastState = digitalRead(Pin_ButtonY.pinNumber);
-
-	Pin_ButtonLB.lastState = digitalRead(Pin_ButtonLB.pinNumber);
-	Pin_ButtonRB.lastState = digitalRead(Pin_ButtonRB.pinNumber);
-
-	Pin_ButtonBack.lastState  = digitalRead(Pin_ButtonBack.pinNumber);
-	Pin_ButtonStart.lastState = digitalRead(Pin_ButtonStart.pinNumber);
-
-	Pin_ButtonL3.lastState = digitalRead(Pin_ButtonL3.pinNumber);
-	Pin_ButtonR3.lastState = digitalRead(Pin_ButtonR3.pinNumber);
-
-	#if ProcessDpadButtons == 1
-		Pin_DpadUp.lastState    = digitalRead(Pin_DpadUp.pinNumber);
-		Pin_DpadDown.lastState  = digitalRead(Pin_DpadDown.pinNumber);
-		Pin_DpadLeft.lastState  = digitalRead(Pin_DpadLeft.pinNumber);
-		Pin_DpadRight.lastState = digitalRead(Pin_DpadRight.pinNumber);
-	#endif
-
+	for (int i = sizeof(PinButton); i --> 0;) {
+		struct Pin_State& currentPinButton = PinButton[i];
+		currentPinButton.lastState = digitalRead(currentPinButton.pinNumber);
+	}
+	
 	// Set XInput buttons
-	XInput.setButton(XInputController::Map_ButtonA, !Pin_ButtonA.lastState);
-	XInput.setButton(XInputController::Map_ButtonB, !Pin_ButtonB.lastState);
-	XInput.setButton(XInputController::Map_ButtonX, !Pin_ButtonX.lastState);
-	XInput.setButton(XInputController::Map_ButtonY, !Pin_ButtonY.lastState);
+	for (int i = sizeof(PinButton)
+		#ifdef UseSOCD
+		-4
+		#endif
+			; i --> 0;) {
+		struct Pin_State& currentPinButton = PinButton[i];
+		XInput.setButton(currentPinButton.control, !currentPinButton.lastState);
+	}
 
-	XInput.setButton(XInputController::Map_ButtonLB, !Pin_ButtonLB.lastState);
-	XInput.setButton(XInputController::Map_ButtonRB, !Pin_ButtonRB.lastState);
-
-	XInput.setButton(XInputController::Map_ButtonBack, !Pin_ButtonBack.lastState);
-	XInput.setButton(XInputController::Map_ButtonStart, !Pin_ButtonStart.lastState);
-
-	XInput.setButton(XInputController::Map_ButtonL3, !Pin_ButtonL3.lastState);
-	XInput.setButton(XInputController::Map_ButtonR3, !Pin_ButtonR3.lastState);
-
-	#if ProcessDpadButtons == 1
+	#if defined(UseSOCD) && ProcessDpadButtons == 1
 		// Set XInput DPAD values
-		XInput.setDpad(!Pin_DpadUp.lastState, !Pin_DpadDown.lastState, !Pin_DpadLeft.lastState, !Pin_DpadRight.lastState);
+		XInput.setDpad(
+			!PinButton[sizeof(PinButton)-4].lastState,
+			!PinButton[sizeof(PinButton)-3].lastState,
+			!PinButton[sizeof(PinButton)-2].lastState,
+			!PinButton[sizeof(PinButton)-1].lastState)
+		;
 	#endif
 
 	// Set XInput trigger values
@@ -286,6 +259,7 @@ void loop() {
 	#endif
 
 	// TODO: read again and calculate debouncing/filtering
+	// joystick output = (A&&B) || (A&&C) || (B&&C) // because it doesn't matter if all three are 
 
 	// TODO: reflex fine-tune
 	// pucgenie: without SerialUSB, measuring time is complicated.

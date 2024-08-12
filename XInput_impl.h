@@ -68,12 +68,13 @@ const XInputMap_Button XInputController::Map_ButtonR3(2, 7);
 const XInputMap_Button XInputController::Map_ButtonLB(3, 0);
 const XInputMap_Button XInputController::Map_ButtonRB(3, 1);
 const XInputMap_Button XInputController::Map_ButtonLogo(3, 2);
+// pucgenie: Where is 3,3 ?
 const XInputMap_Button XInputController::Map_ButtonA(3, 4);
 const XInputMap_Button XInputController::Map_ButtonB(3, 5);
 const XInputMap_Button XInputController::Map_ButtonX(3, 6);
 const XInputMap_Button XInputController::Map_ButtonY(3, 7);
 
-const XIRange XInputMap_Trigger::outputRange = { 0, 255 };  // uint8_t
+const XIRange XInputMap_Trigger::outputRange = { 0x00, 0xFF };  // uint8_t
 
 // static const XInputMap_Trigger * XInputController::getTriggerFromEnum(const XInputControl ctrl) {
 // 	switch (ctrl) {
@@ -83,7 +84,7 @@ const XIRange XInputMap_Trigger::outputRange = { 0, 255 };  // uint8_t
 // 	}
 // }
 
-const XIRange XInputMap_Joystick::outputRange = { -32768, 32767 };  // int16_t
+const XIRange XInputMap_Joystick::outputRange = { -0x8000, 0x7FFF };  // int16_t
 
 // static const XInputMap_Joystick * XInputController::getJoyFromEnum(const XInputControl ctrl) {
 // 	switch (ctrl) {
