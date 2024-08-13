@@ -219,6 +219,8 @@ nice red pushbutton, had a worst case bounce when it opened of 157 msec – almo
 of a second! Yuk. Yet it never exceeded a 20 μsec bounce when closed." - https://my.eng.utah.edu/~cs5780/debouncing.pdf A Guide to Debouncing, Jack G. Ganssle
 **/
 void loop() {
+	// less than 16k CPU instructions available per loop run.
+
 	// Read pin values and store in variables
 	// (Note the "!" to invert the state, because LOW = pressed)
 
@@ -271,9 +273,9 @@ void loop() {
 		TIMSK1 |= (1 << OCIE1A);
 
 		set_sleep_mode(SLEEP_MODE_IDLE);
-		sleep_enable();
+		//sleep_enable(); // included in sleep_mode
 		sleep_mode();
-		sleep_disable();
+		//sleep_disable(); // included in sleep_mode
 	#endif
 
 	// joystick output = (A&&B) || (A&&C) || (B&&C) // because it doesn't matter if all three are at same level
@@ -300,7 +302,7 @@ void loop() {
 
 	// TODO: reflex fine-tune
 	// pucgenie: without SerialUSB, measuring time is complicated.
-	// 13 : 11 should be good, but I don't know.
+	// 13 (no data changed) : 11 (USB data to send) should be good, but I don't know.
 	if (XInput.send() == 0) {
 		#ifndef COMPLETELY_UNTOUCH_TIMER1
 			OCR1A = 2;
@@ -310,9 +312,9 @@ void loop() {
 			TIMSK1 |= (1 << OCIE1A);
 
 			set_sleep_mode(SLEEP_MODE_IDLE);
-			sleep_enable();
+			//sleep_enable(); // included in sleep_mode
 			sleep_mode();
-			sleep_disable();
+			//sleep_disable(); // included in sleep_mode
 		#endif
 	}
 }

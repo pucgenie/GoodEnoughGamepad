@@ -59,8 +59,16 @@ enum class XInputLEDPattern : uint8_t {
 struct XInputMap_Button {
 	constexpr XInputMap_Button(const uint8_t i, const uint8_t o)
 		: index(i), mask(o) {}
-	const uint8_t index :5;
-	const uint8_t mask  :3;
+	const uint8_t index
+		#ifdef REDUCE_RAM_MOSTLY_GLOBALS
+			:5
+		#endif
+	;
+	const uint8_t mask
+		#ifdef REDUCE_RAM_MOSTLY_GLOBALS
+			:3
+		#endif
+	;
 };
 
 // Control Input Ranges
@@ -103,8 +111,16 @@ struct XInputMap_Joystick {
 struct XInputMap_Rumble {
 	constexpr XInputMap_Rumble(const uint8_t rIndex, const uint8_t bIndex)
 		: rxIndex(rIndex), bufferIndex(bIndex) {}
-	const uint8_t rxIndex     :4;
-	const uint8_t bufferIndex :4;
+	const uint8_t rxIndex
+		#ifdef REDUCE_RAM_MOSTLY_GLOBALS
+			:4
+		#endif
+	;
+	const uint8_t bufferIndex
+		#ifdef REDUCE_RAM_MOSTLY_GLOBALS
+			:4
+		#endif
+	;
 };
 
 class XInputController {
