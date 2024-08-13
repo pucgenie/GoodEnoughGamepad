@@ -191,7 +191,17 @@ static inline void computeTriggerValue(const XInputMap_Trigger &control_trigger,
 // 	return (a & b) | (a & c) | (b & c);
 // }
 
+
+/**
+If last state was 1, reading 1 at step 1 would already mean majority 1-vote, so step 2 doesn't need to read the pin's state again.
+If last state was 1, reading 0 at step 1 makes it necessary to read at step 2 again.
+If last state was 0, reading 1 at step 1 makes it necessary to read at step 2 again.
+
+Method b: Just sum up step 1 and step 2. If it ==2 or ==0, step 2 is not necessary.
+Method c: Map values to 0-4 so we can detect whether or not the corresponding XInput button needs to be flipped without relying on XInputController#getButton
+**/
 static inline uint8_t rereadIfNecessary(struct Pin_State &currentPinButton) {
+	// Method b
 	switch (currentPinButton.state) {
 		case 1:
 			currentPinButton.state = digitalRead(currentPinButton.pinNumber);
@@ -211,7 +221,8 @@ of a second! Yuk. Yet it never exceeded a 20 μsec bounce when closed." - https:
 void loop() {
 	// Read pin values and store in variables
 	// (Note the "!" to invert the state, because LOW = pressed)
-	/* // needs 106 bytes more program memory?
+
+	/* // alternative loop needs 106 bytes more program memory?
 	for (uint8_t i = PinButtonArraySize; i --> 0;) {
 		struct Pin_State& currentPinButton = PinButton[i];
 		currentPinButton.state = digitalRead(currentPinButton.pinNumber);
@@ -223,7 +234,6 @@ void loop() {
 	}
 
 	// Set XInput trigger values
-
 	computeTriggerValue(XInput.Map_TriggerLeft, Pin_TriggerL);
 	computeTriggerValue(XInput.Map_TriggerRight, Pin_TriggerR);
 
