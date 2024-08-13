@@ -119,6 +119,7 @@ public:
 
 	// Set Control Surfaces
 	void setButton(const XInputMap_Button &button, boolean state);
+	void toggleButton0(const XInputMap_Button &button);
 
 	void setDpad(boolean up, boolean down, boolean left, boolean right, boolean useSOCD=true);
 

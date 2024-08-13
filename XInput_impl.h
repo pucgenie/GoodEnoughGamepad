@@ -159,14 +159,18 @@ void XInputController::setButton(const XInputMap_Button &buttonData, const boole
 	if (getButton(buttonData) == state) {
 return;  // Button hasn't changed
 	}
-	// would not reach this code path if state hasn't changed
-	tx[buttonData.index] ^= (1 << buttonData.mask);
+	// would not reach this code path if state hasn't _changed_
+	toggleButton0(buttonData);
 	newData = true;
 	//else {
 	//	Range * triggerRange = getRangeFromEnum(button);
 	//	if (triggerRange == nullptr) return;  // Not a trigger (or joystick, but the trigger function will ignore that)
 	//	setTrigger(button, state ? triggerRange->max : triggerRange->min);  // Treat trigger like a button
 	//}
+}
+
+inline void XInputController::toggleButton0(const XInputMap_Button &buttonData) {
+	tx[buttonData.index] ^= (1 << buttonData.mask);
 }
 
 void XInputController::setDpad(const boolean up, boolean down, boolean left, boolean right, const boolean useSOCD) {
