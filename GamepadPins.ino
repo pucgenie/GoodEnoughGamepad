@@ -153,7 +153,7 @@ void setup() {
 	#endif
 
 	// Set buttons as inputs, using internal pull-up resistors
-	for (int i = sizeof(PinButton); i --> 0;) {
+	for (uint8_t i = (sizeof PinButton / sizeof(struct Pin_State)); i --> 0;) {
 		pinMode(PinButton[i].pinNumber, INPUT_PULLUP);
 	}
 
@@ -209,14 +209,14 @@ of a second! Yuk. Yet it never exceeded a 20 μsec bounce when closed." - https:
 void loop() {
 	// Read pin values and store in variables
 	// (Note the "!" to invert the state, because LOW = pressed)
-	/*
-	for (uint8_t i = sizeof(PinButton); i --> 0;) {
+	/* // needs 106 bytes more program memory?
+	for (uint8_t i = (sizeof PinButton / sizeof(struct Pin_State)); i --> 0;) {
 		struct Pin_State& currentPinButton = PinButton[i];
-		currentPinButton.lastState = digitalRead(currentPinButton.pinNumber);
+		currentPinButton.state = digitalRead(currentPinButton.pinNumber);
 	}
 	*/
-	for (uint8_t i = 0; i < sizeof(PinButton); ++i) {
-		struct Pin_State& currentPinButton = PinButton[i];
+	for (uint8_t i = 0; i < (sizeof PinButton / sizeof(struct Pin_State)); ++i) {
+		auto &currentPinButton = PinButton[i];
 		currentPinButton.state += digitalRead(currentPinButton.pinNumber);
 	}
 
@@ -267,7 +267,7 @@ void loop() {
 	// joystick output = (A&&B) || (A&&C) || (B&&C) // because it doesn't matter if all three are at same level
 
 	// Set XInput buttons
-	for (int i = sizeof(PinButton)
+	for (uint8_t i = (sizeof PinButton / sizeof(struct Pin_State))
 		#ifdef UseSOCD
 			-4
 		#endif
@@ -279,10 +279,10 @@ void loop() {
 	#if defined(UseSOCD) && ProcessDpadButtons == 1
 		// Set XInput DPAD values
 		XInput.setDpad(
-			!rereadIfNecessary(PinButton[sizeof(PinButton)-4]),
-			!rereadIfNecessary(PinButton[sizeof(PinButton)-3]),
-			!rereadIfNecessary(PinButton[sizeof(PinButton)-2]),
-			!rereadIfNecessary(PinButton[sizeof(PinButton)-1]))
+			!rereadIfNecessary(PinButton[(sizeof PinButton / sizeof(struct Pin_State))-4]),
+			!rereadIfNecessary(PinButton[(sizeof PinButton / sizeof(struct Pin_State))-3]),
+			!rereadIfNecessary(PinButton[(sizeof PinButton / sizeof(struct Pin_State))-2]),
+			!rereadIfNecessary(PinButton[(sizeof PinButton / sizeof(struct Pin_State))-1]))
 		;
 	#endif
 
