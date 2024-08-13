@@ -168,6 +168,20 @@ void setup() {
 
 	//XInput.setAutoSend(false);  // Wait for all controls before sending
 
+	#ifndef COMPLETELY_UNTOUCH_TIMER1
+		noInterrupts();
+		// configure timer1 for waking up from standby
+		TCCR1A = 0x00;
+		TCCR1B = 0;
+
+		// CTC
+		TCCR1B |= (1 << WGM12);
+		// Prescaler 64 (^= 64 µs per tick)
+		TCCR1B |= (1 << CS11) | (1 << CS10);
+
+		interrupts();
+	#endif
+
 	XInput_USB_enable(XInput);
 	XInput.begin();
 }
