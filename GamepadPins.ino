@@ -89,8 +89,8 @@ static XInputController XInput;
 #endif
 
 // Trigger Pins
-static const uint8_t Pin_TriggerL = 40;
-static const uint8_t Pin_TriggerR = 41;
+static const uint8_t Pin_TriggerL = A0; // pucgenie: test error on unwired pin 40
+static const uint8_t Pin_TriggerR = A1; // pucgenie: test error on unwired pin 41
 
 #if UseTriggerButtons == 1
 	// less complexity here
@@ -103,12 +103,12 @@ static const uint8_t Pin_TriggerR = 41;
 static struct Pin_State PinButton[] = {
 	{control: XInputController::Map_ButtonA, pinNumber: 2, state: 0},
 	{control: XInputController::Map_ButtonB, pinNumber: 3, state: 0},
-	{control: XInputController::Map_ButtonX, pinNumber: 4, state: 0}, // pucgenie: test error
+	{control: XInputController::Map_ButtonX, pinNumber: 4, state: 0},
 	{control: XInputController::Map_ButtonY, pinNumber: 5, state: 0},
 	{control: XInputController::Map_ButtonLB, pinNumber: 6, state: 0},
 	{control: XInputController::Map_ButtonRB, pinNumber: 7, state: 0},
 	{control: XInputController::Map_ButtonStart, pinNumber: 0, state: 0},
-	{control: XInputController::Map_ButtonBack, pinNumber: 1, state: 0}, // pucgenie: test error
+	{control: XInputController::Map_ButtonBack, pinNumber: 1, state: 0},
 	{control: XInputController::Map_ButtonL3, pinNumber: 8, state: 0},
 	{control: XInputController::Map_ButtonR3, pinNumber: 9, state: 0},
 // button LOGO unused by design.
@@ -116,7 +116,7 @@ static struct Pin_State PinButton[] = {
 
 #if ProcessDpadButtons == 1
 	// There are dependencies of these controls being at the end of array PinButton[]: UseSOCD
-	{control: XInputController::Map_DpadUp, pinNumber: 14, state: 0}, // pucgenie: test error
+	{control: XInputController::Map_DpadUp, pinNumber: 14, state: 0},
 	{control: XInputController::Map_DpadDown, pinNumber: 16, state: 0},
 	{control: XInputController::Map_DpadLeft, pinNumber: 10, state: 0},
 	{control: XInputController::Map_DpadRight, pinNumber: 15, state: 0},
@@ -191,10 +191,10 @@ static inline void computeTriggerValue(const XInputMap_Trigger &control_trigger,
 	#if UseTriggerButtons == 1
 		// pucgenie: cancel-out remapping values by directly using outputRange values
 		// high->min, low->max
-		auto triggerValue = digitalRead(pin_Trigger) ? XInputMap_Joystick::outputRange.min : XInputMap_Joystick::outputRange.max;
+		int16_t triggerValue = digitalRead(pin_Trigger) ? XInputMap_Joystick::outputRange.min : XInputMap_Joystick::outputRange.max;
 	#else
 		// Read trigger potentiometer values
-		auto triggerValue = analogRead(pin_Trigger);
+		int triggerValue = analogRead(pin_Trigger);
 	#endif
 	
 	XInput.setTrigger(control_trigger, triggerValue);

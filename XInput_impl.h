@@ -74,7 +74,7 @@ const XInputMap_Button XInputController::Map_ButtonB(3, 5);
 const XInputMap_Button XInputController::Map_ButtonX(3, 6);
 const XInputMap_Button XInputController::Map_ButtonY(3, 7);
 
-const XIRange XInputMap_Trigger::outputRange = { 0x00, 0xFF };  // uint8_t
+const XIRange XInputMap_Trigger::outputRange = { 0x00000000, 0x000000FF };  // uint8_t
 
 // static const XInputMap_Trigger * XInputController::getTriggerFromEnum(const XInputControl ctrl) {
 // 	switch (ctrl) {
@@ -84,7 +84,7 @@ const XIRange XInputMap_Trigger::outputRange = { 0x00, 0xFF };  // uint8_t
 // 	}
 // }
 
-const XIRange XInputMap_Joystick::outputRange = { -0x8000, 0x7FFF };  // int16_t
+const XIRange XInputMap_Joystick::outputRange = { -0x00008000, 0x00007FFF };  // int16_t range in tx[]
 
 // static const XInputMap_Joystick * XInputController::getJoyFromEnum(const XInputControl ctrl) {
 // 	switch (ctrl) {
