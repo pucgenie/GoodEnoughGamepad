@@ -69,6 +69,7 @@ struct Pin_State {
 	const XInputMap_Button& control;
 	const uint8_t pinNumber;
 	// 2: high, 0: low, 1: read input again. :2 would cause more clock cycles.
+	// We could read button state from XInput and save one bit here - but storage is available here so let's save those CPU cycles.
 	uint8_t state;
 };
 
@@ -263,10 +264,9 @@ void loop() {
 		sleep_disable();
 	#endif
 
-	// TODO: read again and calculate debouncing/filtering
-	// joystick output = (A&&B) || (A&&C) || (B&&C) // because it doesn't matter if all three are 
+	// joystick output = (A&&B) || (A&&C) || (B&&C) // because it doesn't matter if all three are at same level
 
-		// Set XInput buttons
+	// Set XInput buttons
 	for (int i = sizeof(PinButton)
 		#ifdef UseSOCD
 			-4
