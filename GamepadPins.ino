@@ -123,6 +123,8 @@ static struct Pin_State PinButton[] = {
 #endif
 };
 
+#define PinButtonArraySize (sizeof PinButton / sizeof(struct Pin_State))
+
 #ifndef COMPLETELY_UNTOUCH_TIMER1
   ISR(TIMER1_COMPA_vect) {
     // disable timer1 interrupts
@@ -153,7 +155,7 @@ void setup() {
 	#endif
 
 	// Set buttons as inputs, using internal pull-up resistors
-	for (uint8_t i = (sizeof PinButton / sizeof(struct Pin_State)); i --> 0;) {
+	for (uint8_t i = PinButtonArraySize; i --> 0;) {
 		pinMode(PinButton[i].pinNumber, INPUT_PULLUP);
 	}
 
@@ -210,12 +212,12 @@ void loop() {
 	// Read pin values and store in variables
 	// (Note the "!" to invert the state, because LOW = pressed)
 	/* // needs 106 bytes more program memory?
-	for (uint8_t i = (sizeof PinButton / sizeof(struct Pin_State)); i --> 0;) {
+	for (uint8_t i = PinButtonArraySize; i --> 0;) {
 		struct Pin_State& currentPinButton = PinButton[i];
 		currentPinButton.state = digitalRead(currentPinButton.pinNumber);
 	}
 	*/
-	for (uint8_t i = 0; i < (sizeof PinButton / sizeof(struct Pin_State)); ++i) {
+	for (uint8_t i = 0; i < PinButtonArraySize; ++i) {
 		auto &currentPinButton = PinButton[i];
 		currentPinButton.state += digitalRead(currentPinButton.pinNumber);
 	}
@@ -267,7 +269,7 @@ void loop() {
 	// joystick output = (A&&B) || (A&&C) || (B&&C) // because it doesn't matter if all three are at same level
 
 	// Set XInput buttons
-	for (uint8_t i = (sizeof PinButton / sizeof(struct Pin_State))
+	for (uint8_t i = PinButtonArraySize
 		#ifdef UseSOCD
 			-4
 		#endif
@@ -279,10 +281,10 @@ void loop() {
 	#if defined(UseSOCD) && ProcessDpadButtons == 1
 		// Set XInput DPAD values
 		XInput.setDpad(
-			!rereadIfNecessary(PinButton[(sizeof PinButton / sizeof(struct Pin_State))-4]),
-			!rereadIfNecessary(PinButton[(sizeof PinButton / sizeof(struct Pin_State))-3]),
-			!rereadIfNecessary(PinButton[(sizeof PinButton / sizeof(struct Pin_State))-2]),
-			!rereadIfNecessary(PinButton[(sizeof PinButton / sizeof(struct Pin_State))-1]))
+			!rereadIfNecessary(PinButton[PinButtonArraySize-4]),
+			!rereadIfNecessary(PinButton[PinButtonArraySize-3]),
+			!rereadIfNecessary(PinButton[PinButtonArraySize-2]),
+			!rereadIfNecessary(PinButton[PinButtonArraySize-1]))
 		;
 	#endif
 
