@@ -103,12 +103,12 @@ static const uint8_t Pin_TriggerR = 41;
 static struct Pin_State PinButton[] = {
 	{control: XInputController::Map_ButtonA, pinNumber: 2, state: 0},
 	{control: XInputController::Map_ButtonB, pinNumber: 3, state: 0},
-	{control: XInputController::Map_ButtonX, pinNumber: 4, state: 0},
+	{control: XInputController::Map_ButtonX, pinNumber: 4, state: 0}, // pucgenie: test error
 	{control: XInputController::Map_ButtonY, pinNumber: 5, state: 0},
 	{control: XInputController::Map_ButtonLB, pinNumber: 6, state: 0},
 	{control: XInputController::Map_ButtonRB, pinNumber: 7, state: 0},
 	{control: XInputController::Map_ButtonStart, pinNumber: 0, state: 0},
-	{control: XInputController::Map_ButtonBack, pinNumber: 1, state: 0},
+	{control: XInputController::Map_ButtonBack, pinNumber: 1, state: 0}, // pucgenie: test error
 	{control: XInputController::Map_ButtonL3, pinNumber: 8, state: 0},
 	{control: XInputController::Map_ButtonR3, pinNumber: 9, state: 0},
 // button LOGO unused by design.
@@ -116,7 +116,7 @@ static struct Pin_State PinButton[] = {
 
 #if ProcessDpadButtons == 1
 	// There are dependencies of these controls being at the end of array PinButton[]: UseSOCD
-	{control: XInputController::Map_DpadUp, pinNumber: 14, state: 0},
+	{control: XInputController::Map_DpadUp, pinNumber: 14, state: 0}, // pucgenie: test error
 	{control: XInputController::Map_DpadDown, pinNumber: 16, state: 0},
 	{control: XInputController::Map_DpadLeft, pinNumber: 10, state: 0},
 	{control: XInputController::Map_DpadRight, pinNumber: 15, state: 0},
