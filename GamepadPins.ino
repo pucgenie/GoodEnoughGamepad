@@ -50,10 +50,10 @@
 
 // Setup
 #define UseLeftJoystick 0  // set to 1 to enable left joystick
-static const boolean InvertLeftYAxis   = false;  // set to true to use inverted left joy Y
+#define InvertLeftYAxis false  // set to true to use inverted left joy Y
 
 #define UseRightJoystick 0  // set to 1 to enable right joystick
-static const boolean InvertRightYAxis  = false;  // set to true to use inverted right joy Y
+#define InvertRightYAxis false  // set to true to use inverted right joy Y
 
 #define UseTriggerButtons 1   // set to 0 if using analog triggers
 //#define UseSOCD // Simultaneous Opposing Cardinal Directions
@@ -77,20 +77,20 @@ static XInputController XInput;
 
 #if UseLeftJoystick == 1
 	// Joystick Pins
-	static const uint8_t Pin_LeftJoyX  = A0;
-	static const uint8_t Pin_LeftJoyY  = A1;
+	#define Pin_LeftJoyX  A0
+	#define Pin_LeftJoyY  A1
 	// pucgenie: don't need to zero-initialize - is always written to at first.
 	static int16_t joyLeftOld[2];
 #endif
 #if UseRightJoystick == 1
-	static const uint8_t Pin_RightJoyX = A2;
-	static const uint8_t Pin_RightJoyY = A3;
+	#define Pin_RightJoyX  A2
+	#define Pin_RightJoyY  A3
 	static int16_t joyRightOld[2];
 #endif
 
 // Trigger Pins
-static const uint8_t Pin_TriggerL = A0; // pucgenie: test error on unwired pin 40
-static const uint8_t Pin_TriggerR = A1; // pucgenie: test error on unwired pin 41
+#define Pin_TriggerL  A0 // pucgenie: test error on unwired pin 40
+#define Pin_TriggerR  A1 // pucgenie: test error on unwired pin 41
 
 #if UseTriggerButtons == 1
 	// less complexity here

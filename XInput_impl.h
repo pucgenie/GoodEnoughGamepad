@@ -234,8 +234,7 @@ void XInputController::setJoystickY(const XInputMap_Joystick &joyData, int32_t y
 void XInputController::setJoystick(const XInputMap_Joystick &joyData, const boolean up, boolean down, boolean left, boolean right, const boolean useSOCD) {
 	const XIRange &range = XInputMap_Joystick::outputRange;
 
-	int16_t x = 0;
-	int16_t y = 0;
+	int16_t x, y;
 
 	// Simultaneous Opposite Cardinal Directions (SOCD) Cleaner
 	if (useSOCD) {
@@ -249,10 +248,14 @@ void XInputController::setJoystick(const XInputMap_Joystick &joyData, const bool
 	if (left != right) {
 		if (left == true) { x = range.min; }
 		else if (right == true) { x = range.max; }
+	} else {
+		x = 0;
 	}
 	if (up != down) {
 		if (up == true) { y = range.max; }
 		else if (down == true) { y = range.min; }
+	} else {
+		y = 0;
 	}
 
 	setJoystickDirect(joyData, x, y);
@@ -280,10 +283,6 @@ void XInputController::releaseAll() {
 
 inline boolean XInputController::getButton(const XInputMap_Button &buttonData) const {
 	return tx[buttonData.index] & (1 << buttonData.mask);
-}
-
-inline boolean XInputController::getDpad(const XInputMap_Button &dpad) const {
-	return getButton(dpad);
 }
 
 inline uint8_t XInputController::getTrigger(const XInputMap_Trigger &triggerData) const {

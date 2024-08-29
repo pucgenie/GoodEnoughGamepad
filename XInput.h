@@ -150,7 +150,6 @@ public:
 
 	// Read Control Surfaces
 	boolean getButton(const XInputMap_Button &button) const;
-	boolean getDpad(const XInputMap_Button &dpad) const;
 	uint8_t getTrigger(const XInputMap_Trigger &trigger) const;
 	int16_t getJoystickX(const XInputMap_Joystick &joyData) const;
 	int16_t getJoystickY(const XInputMap_Joystick &joyData) const;
